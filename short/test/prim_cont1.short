@@ -1,0 +1,40 @@
+protocol prim_cont1 {
+  interaction i {
+    msg Client -> Set<Server> request()  (* multicast*)
+    msg Server ->     Client  response()
+
+    role Client {
+      state Map<Boolean, Boolean> x
+
+      handle once go {
+        state Boolean ok
+        view(Server) !! request()
+        await msg response from majority(Server)
+        change ok = true
+      }
+
+      handle any msg m {
+        | m.foo -> 
+           state Boolean ok
+           view(Server) !! request()
+           await msg response from majority(Server)
+           change ok = true
+      }
+
+      handle crash Server s {
+        changeview Server = @ \ s
+	(* note, we're not rewinding "go" here *)
+      }
+
+      handle event whatever {
+        rewind go
+      }
+    }
+
+    role Server {
+      handle msg request {
+        reply response()
+      }
+    }
+  }
+}

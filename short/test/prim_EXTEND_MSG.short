@@ -1,0 +1,21 @@
+PROTOCOL prim_EXTEND {
+  INTERACTION i() {
+    MSG R -> S m(BOOLEAN x)
+    ROLE R() {
+      HANDLE EVENT foo {
+        view(S) ! m(x = TRUE)
+      }
+    }
+    ROLE S() {
+    }
+  }
+
+  INTERACTION j() {
+    EXTEND MSG R -> S m(INT ext_x)
+    ROLE R() {
+      HANDLE EVENT bar {
+        view(S) ! m(ext_x = 1)
+      }      
+    }
+  }
+}

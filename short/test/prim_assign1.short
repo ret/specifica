@@ -1,0 +1,17 @@
+PROTOCOL prim_assign1 {
+
+ROLES X
+
+INTERACTION dummy() {
+  ROLE X() {
+    HANDLE EVENT foo(BOOLEAN b) {
+      CHANGE foo = 1
+      (* this requires a nested EXCEPT to be code-gen'd which we not do. *)
+      CHANGE map[b,c] = 2
+      CHANGE map[b][c] = 3     (* not supported, write [b,c] instead! *)
+      CHANGE map[b,c].bar = 4
+    }
+  }
+}
+
+}

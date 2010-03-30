@@ -1,0 +1,72 @@
+#!/bin/bash -e
+short prim_all1.short >prim_all1.tla &&
+short prim_self.short &&
+short prim_REPLY.short &&
+short prim_LET.short &&
+short prim_SEND1.short &&
+short prim_assign1.short &&
+short prim_merge1.short &&
+short prim_merge2.short &&
+short prim_msg1.short &&
+short prim_SEND.short &&
+short prim_tag1.short &&
+short prim_tag2.short &&
+
+short pingpong2.short &&
+
+short ring.short &&
+
+short reqres2.short &&
+
+short boxwood2.short &&
+short replication_join2.short replication_core2.short > replication.tla &&
+
+short prim_timer1.short &&
+short prim_let1.short &&
+short prim_tla.short &&
+short prim_GLOBAL.short &&
+short prim_foreignchange1.short &&
+short prim_timer1.short &&
+short prim_timer3.short >prim_timer3.tla &&
+short prim_timerlinearmaxd.short >prim_timerlinearmaxd.tla &&
+short prim_every.short >prim_every.tla &&
+short prim_every2.short >prim_every2.tla &&
+short prim_crash.short >prim_crash.tla &&
+short prim_crash2.short >prim_crash2.tla &&
+short prim_SHUTDOWN.short &&
+short prim_SHUTDOWN2.short &&
+short prim_TwoCRASH.short &&
+short prim_EXTEND.short &&
+short prim_EXTEND2.short &&
+short prim_EXTEND_MSG.short &&
+short prim_ANY_EXT_interaction.short >prim_ANY_EXT_interaction.tla &&
+short prim_WHERE.short &&
+short prim_ONCE.short >prim_ONCE.tla &&
+short prim_ANY_MERGE.short &&
+short prim_ANY_CONT_INTERACTION.short &&
+short prim_ANY_MERGE2.short &&
+short prim_ANY_MSG.short &&
+short prim_ANY_MANY.short &&
+short prim_ANY_MANY2.short &&
+short prim_cont1.short &&
+short TwoPC.short > TwoPC.tla &&
+short prim_stateinit.short > prim_stateinit.tla &&
+short prim_NONDET.short > prim_NONDET.tla &&
+short prim_pc_guard.short &&
+short prim_rewind.short %%
+short prim_rewind_and_extend.short &&
+short prim_whilein_do2.short &&
+short prim_do_meanwhile.short &&
+short prim_WHEN_BLOCK.short &&
+short prim_specialOpCaps.short &&
+short prim_msghanderannotation.short &&
+short prim_selective_recv.short > prim_selective_recv.tla &&
+short prim_singlemsg_rcv.short > prim_singlemsg_rcv.tla &&
+short prim_persistent.short &&
+short prim_startrole.short >prim_startrole.tla &&
+short prim_crash3.short >prim_crash3.tla &&
+short prim_tla_override.short >prim_tla_override.tla
+
+
+
+

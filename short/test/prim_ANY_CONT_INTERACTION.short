@@ -1,0 +1,19 @@
+protocol prim_ANY_CONT_INTERACTION {
+  interaction i {
+    role R {
+      handle event foo {
+        change x = 1
+	await msg bar
+        change x = 2
+      }
+
+      handle any msg m {
+        | m.attr = 1 ->
+	   change x = 0
+           break
+        | TRUE -> 
+	   continue
+      }
+    }
+  }
+}

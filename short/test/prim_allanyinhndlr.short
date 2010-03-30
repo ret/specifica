@@ -1,0 +1,24 @@
+protocol prim_allanyinhndlr {
+  roles A, B
+  interaction foo {
+    msg A -> SET<B> foo()
+    msg A -> SET<B> bar()
+
+    role B {
+      state BOOLEAN y = FALSE
+      handle msg foo from all(A) { (* group receive *)
+        LET x = SENDERS(bar)
+        LET z = ALL(foo)
+        LET z = ANY(foo)
+	change y = TRUE
+      }
+
+      handle msg foo { (* single receive *)
+        LET x = SENDERS(bar)
+        LET z = ALL(foo)
+        LET z = ANY(foo)
+	change y = TRUE
+      }
+    }
+  }
+}

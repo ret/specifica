@@ -1,0 +1,17 @@
+protocol prim_NONDET {
+  constant NIL
+
+  interaction i {
+    role R {
+      state Nil<BOOLEAN> sa
+
+      handle event a {
+	change sa = FALSE
+      }
+
+      handle event a {
+	change sa = TRUE
+      }
+    }
+  }
+}

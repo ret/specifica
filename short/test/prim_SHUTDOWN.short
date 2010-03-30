@@ -1,0 +1,40 @@
+PROTOCOL prim_SHUTDOWN {
+  ROLES S
+
+  INTERACTION i() {
+    (* this role is crashable, i.e. /\ running generated, since it includes *)
+    (* a SHUTDOWN command *)
+    ROLE S() {
+      STATE BOOLEAN whatever = FALSE
+      (* too see that the existing handler is predicated with 'running' *)
+      WHEN 1 = 1 HANDLE EVENT foo {
+	CHANGE whatever = TRUE
+        (* This shutdown does not send a notification since no other *)
+        (* role has a CRASH handler for S *)
+	SHUTDOWN
+      }
+    }
+  }
+
+  INTERACTION i() {
+    ROLE R() {
+      (* the existence of this handler does imply that the SHUTDOWN below *)
+      (* does send a crash message to R, unlike the i/S example above. *)
+      STATE BOOLEAN foo = False
+      HANDLE CRASH X x {
+        CHANGE foo = 1
+      }
+    }
+
+    (* role X crashable owing to R crash handler *)
+    ROLE X() {
+      STATE BOOLEAN whatever = FALSE
+      (* too see that the existing handler is predicated with 'running' *)
+      WHEN 1 = 1 HANDLE EVENT foo {
+	CHANGE whatever = TRUE
+        (* This shutdown DOES send a notification since X is handling it *)
+	SHUTDOWN
+      }
+    }
+  }
+}

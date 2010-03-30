@@ -1,0 +1,22 @@
+name:                short
+version:             0.1
+
+license:             BSD3
+license-file:        LICENSE
+
+author:              Reto Kramer <kramer@acm.org>
+maintainer:          kramer@acm.org
+stability:           experimental
+synopsis:            Short translator to TLA+
+category:            Language
+description:         
+
+build-type:          Simple
+cabal-version:       >= 1.2
+
+executable           short
+  main-is:           short.hs
+  build-depends:     base, containers, bdataenc, Crypto, parsec >= 3.0.1, 
+                     haskell98, regex-compat, wl-pprint, tlaplus
+  extensions:        Generics, DeriveDataTypeable
+  hs-source-dirs:    src

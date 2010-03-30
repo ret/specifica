@@ -1,0 +1,135 @@
+protocol Replication concern replica_crash {
+
+constant Key
+constant NIL // fixme should be in auto gen part of config
+constant MaxLClock
+
+roles Client, Replica
+
+interaction replica_crash_partI {
+  display swimlane {
+    msg crashReplicaClient color = red 
+  }
+
+  (* the naive part *)
+  role Client {
+    (* Selective_receive needed to make handle case where one ack has arrived*)
+    (* but the other hasn't, and perhaps never will due to a replica crash.  *)
+    using selective_receive
+    handle crash Replica r { @clientHandlesReplicaCrash
+      changeview Replica = @ \ {r}
+    }
+  }
+}
+
+interaction replica_crash_partII {
+  display swimlane {
+    msg crashReplicaReplica color = red
+  }
+
+  tla { LClock == 0..MaxLClock }
+
+  (* the hard part that deals with delayed crash notifications *)
+  role Replica {
+    state LClock lclock = 0
+    state view Set<Replica> = Replica \ InitDownReplica
+
+    tag any msg m to Client { (* rdack and wrack *)
+      Pair< LClock, SET<Replica> > rview = << lclock, view(Replica) >>
+    }
+
+    handle any msg m {
+      let newview = latest_view({<<lclock, view(Replica)>> , m.rview})
+      change lclock = newview[1]
+      changeview Replica = newview[2]      
+      continue
+    }
+
+    handle crash Replica r {
+      changeview Replica = @ \ {r}
+      change lclock = @ + 1
+    }
+  }
+
+  tla { latest_view(rviewset) ==
+          CHOOSE maxv \in rviewset: \A v \in rviewset:
+                   maxv[1] >= v[1] (* compare logical clock values *)
+  }
+  role Client {
+    state LClock lclock = 0
+
+    extend @rdack(ms), @wrack(ms) {
+      let newview = latest_view({m.rview: m \in ms} 
+                           \cup {<<lclock, view(Replica)>>})
+      change lclock = newview[1]
+      changeview Replica = newview[2]
+    }
+    extend @clientHandlesReplicaCrash {
+      change lclock = @ + 1
+    }
+
+    tag any msg m to Replica {
+      Pair< LClock, SET<Replica> > rview = << lclock, view(Replica) >>
+    }
+  }
+
+  (* change how the client determines the read value to take rview into     *)
+  (* account                                                                *)
+  override basic_rd_wr, client_crash_stale tla { 
+    rdval(rdack) == LET lv(ms) == LET vs == latest_view({m.rview : m \in ms})
+                                   IN {m \in ms: m.sender \in vs[2]}
+                     IN IF \E m \in rdack: m.stale
+                        THEN LET nonstale == lv({m \in rdack: ~m.stale})
+                              IN IF nonstale = {}
+                                 THEN any2(lv(rdack), "data")
+                                 ELSE any2(nonstale, "data")
+                        ELSE any2(lv(rdack),"data")
+  }
+
+}
+
+interaction check_this_replica_crash {
+  (* add handling of 'running' *)
+  override check_this 
+  tla { RS == { r \in Replica: st_Replica[r].g_running } }
+}
+
+
+
+
+
+
+(*
+    (* Selective_receive needed to make handle case where one ack has arrived*)
+    (* the 2nd one may be the one with the rview # NIL. In that case we must *)
+    (* process it, rather than the multi-receive (implicitly single msg      *)
+    (* handling is prefered over equally enabled multi-msg handlers). To be  *)
+    (* able to run the single msg handler though, the clogging rdack ahead   *)
+    (* of the one with rview # NIL must be skipped - hence the selective_r.  *)
+    using selective_receive
+    handle any msg m {
+      | /\ rdwr@rd_pending
+        /\ m.type = "rdack"
+        /\ m.rview # NIL
+        /\ m.rview # view(Replica) ->
+             break (* bug: 'break' cannot be after 'await', workaround: mv up*)
+             m.rview !! release(k=cur_k)
+             rewind rdwr to init (* restart the rdwr cycle, i.e. retry rd *)
+             changeview Replica = m.rview
+             (* cludge to pass v into and past the await point *)
+             (* view(Replica) here is the old view, the =m.rview not run yet *)
+             state SET<Replica> v = view(Replica) \ m.rview 
+             await msg rdack from EXPR(Replica, v) (* clean out old resp. *)
+      | otherwise ->
+           continue
+    }
+*)
+  }
+  tla { any4(s, fieldname,avoidobj,emptyres) ==
+          LET ss == { v \in { val[fieldname] : val \in s}: v # avoidobj}
+           IN IF Assert(\A a,b \in ss: a = b,
+                        <<"any4(s,fieldname,obj,emptyres), not all elements (avoiding obj) are equal!",
+                        s, fieldname, avoidobj, ss>>)
+              THEN IF ss = {} THEN emptyres ELSE CHOOSE e \in ss: TRUE
+              ELSE FALSE 
+  }

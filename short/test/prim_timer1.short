@@ -1,0 +1,41 @@
+PROTOCOL prim_timer1 {
+  INTERACTION foo() {
+    TLA { INT == {0 .. 11} }
+    ROLE R() {
+      STATE TIMER t
+      STATE TIMER yyy
+      STATE INT x = 0
+      STATE INT to = 0
+      STATE BOOLEAN inprogress = FALSE
+
+      WHEN ~inprogress HANDLE EVENT goo { 
+	CHANGE x = IF @ < 5 THEN @ + 1 ELSE @ 
+        CHANGE inprogress = TRUE
+        TIMERCANCEL t
+        TIMERRESTART t DURATION 3
+      }
+
+      HANDLE TIMEOUT t {
+        TIMERRESTART t DURATION 3
+        TIMERCANCEL yyy
+        CHANGE to = @ + 1
+        CHANGE inprogress = FALSE
+      }
+
+      HANDLE MSG x {
+        TIMERRESTART t DURATION 3
+        TIMERCANCEL yyy
+      }
+
+      HANDLE CRASH Foo f {
+        TIMERRESTART t DURATION 3
+        TIMERCANCEL yyy
+      }
+    }
+
+    ROLE S() {
+      STATE TIMER a
+      STATE TIMER b
+    }
+  }
+}

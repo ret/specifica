@@ -1,0 +1,19 @@
+protocol prim_msghanderannotation {
+  interaction i {
+    role foo {
+
+      using [some, annotation(), that(is,more), and(more,complex)]
+      handle msg m {
+        change x = 1
+        using selective_receive
+          await msg foo
+        change x = 2
+      }
+
+      using selective_receive
+      handle crash Role r {
+        change x = 3
+      }
+    }
+  }
+}

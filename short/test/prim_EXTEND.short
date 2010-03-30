@@ -1,0 +1,35 @@
+PROTOCOL prim_EXTEND {
+  INTERACTION i() {
+    ROLE R() {
+      STATE BOOLEAN a = FALSE
+
+      (* extension specific to one guard only *)
+      HANDLE MSG e { 
+        | guardE1 -> @anchorA(a), @anchorB(a)
+	    CHANGE a = TRUE
+	| guardE2 -> 
+	    CHANGE a = FALSE
+      }
+
+      (* extension to all branches, NOTE: guard before { *)
+      HANDLE MSG f @anchorA(a), @anchorB(a) {
+        | guardE1 ->
+	    CHANGE a = TRUE
+	| guardE2 -> 
+	    CHANGE a = FALSE
+      }
+
+      (* extension to default branch, NOTE: guard after { *)
+      HANDLE MSG f { @anchorA(a), @anchorB(a)
+        CHANGE a = FALSE
+      }
+    }
+  }
+
+  INTERACTION j() {
+    ROLE R() {
+      STATE BOOLEAN b = FALSE
+      EXTEND @anchorA(foo) { CHANGE b = foo }
+      EXTEND @anchorB(bar) { CHANGE b = (~bar) }    }
+  }
+}

@@ -1,0 +1,46 @@
+protocol prim_ANY_MSG {
+  interaction i {
+
+    msg S -> R ma() (* has a single/multi-handler, AUGMENT existing handler *)
+    msg S -> R mb() (* has a multi-handler, SYNTHESIZE single msg handler   *)
+    msg S -> R mc() (* no explicit handler, SYNTHESIZE single msg handler   *)
+
+    role R {
+      (* expect no merge with any *)
+      when ga handle msg ma from all(S) {
+        change sa = 1
+      }
+
+      (* expect merge with any for single handler *)
+      when ga handle msg ma {
+        change sa = 2
+      }
+
+      (* expect no merge with any, pure multi handler *)
+      when gb handle msg mb from all(S) {
+        change sb = 3
+      }
+
+      (* SYNTESIZE mb handler                  *)
+      (* expect synthesis of a mb handler with *) 
+      (* any handler content since mb only     *)
+      (* appears as a multi-handler explicitly *)
+
+      (* SYNTESIZE mc handler                  *)
+      (* expect synthesis of a mc handler with *) 
+      (* any handler content, even though the  *)
+      (* handler isn't explicitly listed       *)
+
+      when g handle any msg m {
+        | gany ->
+            change sany = 4
+	    break
+        | otherwise ->
+	    continue
+      }
+    }
+ 
+    role S {
+    }
+  }
+}

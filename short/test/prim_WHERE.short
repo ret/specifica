@@ -1,0 +1,43 @@
+PROTOCOL prim_WHERE {
+
+CONSTANT X, init_servers
+
+ROLES Client, Server
+
+INTERACTION basic(Client, Server) {
+  MSG Client -> SET<Server> req()
+  MSG Server -> Client res(BOOLEAN ok)
+
+  ROLE Client(Server init_servers) {
+    STATE VIEW SET<Server> = init_servers
+    STATE BOOLEAN sent = FALSE
+    STATE BOOLEAN done = FALSE
+
+    WHEN ~sent HANDLE EVENT go {
+      CHANGE sent = TRUE
+      VIEW(Server) !! req()
+    }
+
+    HANDLE MSG res FROM MAJORITY(Server) WHERE res.ok {
+      (* Enable this line if you want to see ANY and ALL in action *)
+      (* 
+         ASSERT( ANY(res) = [view |-> {1,2,3}], 
+	         "1", 
+	         res, ANY(res), ALL(res), SENDERS(res))
+      *) 
+      CHANGE done = TRUE
+    }
+
+    WHEN done HANDLE MSG res {
+      DROP res
+    }
+  }
+
+  ROLE Server() {
+    HANDLE MSG req {
+      REPLY res(ok=TRUE)
+    }
+  }
+}
+
+}

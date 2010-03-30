@@ -1,0 +1,30 @@
+(* demonstrates also the ability to hook extra action to crash  *)
+(* useful to clear non persistent variables in prep for restart *)
+PROTOCOL prim_crash {
+  ROLES R, S
+
+  INTERACTION i() {
+    msg S -> R foo()
+
+    ROLE R() {
+      STATE BOOLEAN ups = FALSE
+      HANDLE CRASH S s {
+        CHANGE ups = TRUE
+	SHUTDOWN
+      }
+    }
+
+    ROLE S() {
+      STATE BOOLEAN whatever = FALSE
+      (* too see that the existing handler is predicated with 'running' *)
+      WHEN 1 = 1 HANDLE EVENT foo {
+	CHANGE whatever = TRUE
+      }
+
+      extend @hook_do_crash_S(s) {
+        s ! foo
+        change x = s.bar
+      }
+    }
+  }
+}

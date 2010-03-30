@@ -1,0 +1,20 @@
+PROTOCOL prim_EXTEND {
+  INTERACTION i() {
+    ROLE R() {
+      STATE BOOLEAN x = FALSE
+      STATE BOOLEAN y = FALSE
+
+      HANDLE MSG e @anchor(e) {
+        CHANGE x = TRUE
+        CHANGE y = TRUE
+      }
+    }
+  }
+
+  INTERACTION j() {
+    ROLE R() {
+      EXTEND @anchor(foo) { CHANGE b = foo }
+      EXTEND @anchor(bar) { CHANGE c = bar }
+    }
+  }
+}

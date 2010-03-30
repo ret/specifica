@@ -1,0 +1,39 @@
+PROTOCOL prim_tag1 {
+
+INTERACTION i1() {
+  MSG X -> Y cmd(BOOLEAN regular) (* expect tagging *)
+  MSG X -> Y foo()
+  MSG X -> Y yyy()
+  MSG X -> Z zzz() (* EXPECT this msg NOT to be tagged *)
+
+  ROLE X() {
+    STATE BOOLEAN foo = FALSE
+    HANDLE MSG cmd {
+      CHANGE foo = TRUE
+    }
+
+    HANDLE EVENT go {
+      y ! cmd(regular=FALSE)
+      z ! zzz()
+      y ! foo()
+    }
+
+    TAG ANY MSG m TO Y { BOOLEAN tagged = TRUE }
+    TAG MSG foo TO Y { INT foo = 1 }
+    TAG MSG foo, yyy TO Y { BOOLEAN foo_1 = TRUE, BOOLEAN zzz_1 = FALSE }
+  }
+
+  ROLE Y() {
+  } 
+}
+
+INTERACTION i2() {
+  ROLE X() {
+    STATE BOOLEAN bar = FALSE
+    HANDLE ANY MSG cmd {
+      CHANGE bar = TRUE
+    }
+  }
+}
+
+}

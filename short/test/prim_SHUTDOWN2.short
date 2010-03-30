@@ -1,0 +1,14 @@
+PROTOCOL prim_SHUTDOWN2 {
+  INTERACTION i() {
+    ROLE S() {
+      HANDLE CRASH R r {
+        CHANGE x = FALSE
+      }
+    }
+    ROLE R() {
+      HANDLE EVENT e {
+        SHUTDOWN
+      }
+    }
+  }
+}

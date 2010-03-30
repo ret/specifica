@@ -1,0 +1,23 @@
+(* show how if all roles can be ~running, we add a stutter action to *)
+(* avoid deadlock reports in TLC *)
+PROTOCOL prim_crash2 {
+  ROLES R, S
+
+  INTERACTION i() {
+    ROLE R() {
+      STATE BOOLEAN upsR = FALSE
+      HANDLE CRASH S s {
+        CHANGE upsR = TRUE
+	SHUTDOWN
+      }
+    }
+
+    ROLE S() {
+      STATE BOOLEAN upsS = FALSE
+      HANDLE CRASH R r {
+        CHANGE upsS = TRUE
+	SHUTDOWN
+      }
+    }
+  }
+}

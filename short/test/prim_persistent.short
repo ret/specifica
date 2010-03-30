@@ -1,0 +1,25 @@
+protocol prim_persistent {
+  roles R, S
+  interaction i {
+    role R {
+      persistent state BOOLEAN a = TRUE
+      persistent state BOOLEAN b
+      state BOOLEAN c = TRUE
+      state BOOLEAN d
+
+      state BOOLEAN x = FALSE
+
+      handle crash S s {
+        change x = TRUE
+      }
+    }
+
+    role S {
+     state BOOLEAN x = FALSE
+     handle crash R r {
+        change x = TRUE
+      }
+    }
+
+  }
+}

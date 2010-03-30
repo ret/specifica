@@ -1,0 +1,13 @@
+protocol prim_specialOpCaps {
+  interaction foo {
+    msg R -> SET<R> m()
+    role R {
+      handle msg m from all(R) {
+        let a = all(m)
+        let b = any(m)
+        let c = any2(m,"f")
+        let d = senders(m)
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+protocol prim_rewind_and_extend {
+  interaction i {
+    role R {
+      handle msg foo @extA {
+        change a = 1
+        await msg m @loc, @extB(foo.attr), @extA
+        change a = 2
+      }
+
+      handle event bar {
+        rewind foo to loc
+      }
+
+      extend @extA {
+        change sA = 3
+      }
+
+      extend @extB(attr) {
+        change sB = attr
+      }
+    }
+  }
+}

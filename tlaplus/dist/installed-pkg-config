@@ -1,0 +1,32 @@
+name: tlaplus
+version: 0.1
+license: BSD3
+copyright:
+maintainer: kramer@acm.org
+stability: experimental
+homepage:
+package-url:
+description: Library to facilitate TLA+ processing in Haskell.
+             For TLA+ information, please refer to http://www.lamport.org
+category: Language
+author: Reto Kramer <kramer@acm.org>
+exposed: True
+exposed-modules: Language.TLAPlus.Syntax Language.TLAPlus.Pretty
+                 Language.TLAPlus.Parser Language.TLAPlus.ParserState
+hidden-modules:
+import-dirs: /Users/reto/.cabal/lib/tlaplus-0.1/ghc-6.10.3
+library-dirs: /Users/reto/.cabal/lib/tlaplus-0.1/ghc-6.10.3
+hs-libraries: HStlaplus-0.1
+extra-libraries:
+extra-ghci-libraries:
+include-dirs:
+includes:
+depends: base-4.1.0.0 containers-0.2.0.1 haskell98-1.0.1.0
+         parsec-3.0.1 syb-0.1.0.1 wl-pprint-1.0
+hugs-options:
+cc-options:
+ld-options:
+framework-dirs:
+frameworks:
+haddock-interfaces: /Users/reto/.cabal/share/doc/tlaplus-0.1/html/tlaplus.haddock
+haddock-html: /Users/reto/.cabal/share/doc/tlaplus-0.1/html

@@ -1,0 +1,15 @@
+PROTOCOL prim_SEND1 {
+
+ROLES R
+
+INTERACTION basic(R) {
+  MSG R -> R m()
+
+  ROLE R() {
+    HANDLE EVENT e { foo ! m(a=1) }
+    HANDLE EVENT f { foo.sender ! m(a=1) }
+    HANDLE EVENT g { LET x=1 VIEW(X) ! m(a=1) }
+  }
+}
+
+}

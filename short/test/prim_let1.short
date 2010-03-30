@@ -1,0 +1,24 @@
+PROTOCOL prim_let1 {
+  INTERACTION I() {
+    MSG R -> R m(Int i)
+    ROLE R() {
+      STATE Int y = 0
+      STATE Int f = 0
+      HANDLE EVENT foo1 {
+        LET x = 41 
+        CHANGE y = x + 1
+      }
+      HANDLE EVENT foo2 {
+        LET x = 10
+        CHANGE y = x           (* assign to state var *)
+	LET y = 20             (* local var           *)
+        VIEW(R) ! m(i = y + x) (* ref to local var y  *)
+	CHANGE f = y           (* ref to local var y  *)
+      }
+      HANDLE EVENT foo3 { (* something a little more complicated *)
+	LET x = TimerRemoveAndSchedule(sched, <<time, "tZ">>, {})
+	CHANGE sched = x[1], time = x[2]
+      }
+    }
+  }
+}

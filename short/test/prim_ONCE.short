@@ -1,0 +1,10 @@
+PROTOCOL prim_ONCE {
+  INTERACTION i() {
+    ROLE R() {
+      STATE BOOLEAN x = TRUE
+      HANDLES ONCE start {
+	CHANGE x = FALSE
+      }
+    }
+  }
+}

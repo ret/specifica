@@ -1,0 +1,34 @@
+name:                tlaplus-eval
+version:             0.1
+
+license:             BSD3
+license-file:        LICENSE
+
+author:              Reto Kramer <kramer@acm.org>
+maintainer:          kramer@acm.org
+stability:           experimental
+synopsis:            TLA+ evaluator
+category:            Language
+description:         
+  Simple TLA+ expression evaluator. Does not currently evaluate Actions, but
+  can apply operators and functions. Use the "ASSUME <expr>" form to evaluate
+  and print expr (e.g. using the tli tool).
+
+build-type:          Simple
+cabal-version:       >= 1.2
+
+library
+  exposed-modules:   Language.TLAPlus.Eval
+
+  build-depends:     base, containers, mtl, tlaplus, wl-pprint
+  hs-source-dirs:    src
+  ghc-options:       -Wall
+                     -fwarn-tabs
+                     -fno-warn-missing-signatures
+                     -fno-warn-name-shadowing
+                     -fno-warn-unused-imports
+
+executable           tli
+  main-is:           tli.hs
+  build-depends:     base, haskell98, parsec >= 3.0.1
+  hs-source-dirs:    src

@@ -1,0 +1,11 @@
+protocol prim_tla_override {
+  interaction ia() {
+    tla { foo == bar }
+  }
+  interaction ib() {
+    override ia tla { foo == bar2 }
+  }
+  interaction ic() {
+    override ib tla { foo == bar3 }
+  }
+}

@@ -1,0 +1,38 @@
+protocol p {
+  interaction i {
+    msg R -> R msgA()
+    msg R -> R mA()
+    msg R -> R msgB()
+    msg R -> R mB()
+    msg R -> R mmB2()
+    msg R -> R msgC()
+    msg R -> R mC()
+
+    role R {
+      handle event a {
+        change a = 1
+        foo ! msgA
+	await msg mA
+        change b = 1
+	whilein { 
+	  change c = 2
+          foo ! msgB
+	  await msg mB
+	  change d1 = 3
+	  change d2 = 3
+	  await msg mB2
+	  change d3 = 3
+        } do {
+          handle msg x {
+	    foo ! msgB
+	    await msg mB
+          }
+        }
+        change c = 1
+        foo ! msgC
+	await msg mC
+        change d = 1
+      }
+    }
+  }
+}

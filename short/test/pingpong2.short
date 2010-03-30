@@ -1,0 +1,50 @@
+PROTOCOL pingpong CONCERN core {
+
+CONSTANT Limit
+
+ROLES Forwarder, Initiator
+
+INTERACTION start(Initiator, Forwarder) {
+  ROLE Initiator(Forwarder forwarder) {
+    USE MSG token OF forwarding 
+
+    STATE INT injected = 0
+    STATE VIEWS Forwarder = forwarder
+
+    WHEN injected < Limit HANDLES EVENT start { // finite
+      Forwarder ! token(initiator = SELF, 
+			hops = 0) // send one more token on its way
+      CHANGE injected = injected + 1
+    }
+  }
+}
+
+INTERACTION forwarding(Forwarder, Forwarder) {
+  MSG Forwarder -> Forwarder token(Initiator initiator, Int hops)
+
+  ROLE Forwarder(Forwarder forwarder) {
+    STATE VIEWS Forwarder = forwarder
+    HANDLES MSG token {
+      | token.hops < Limit -> Forwarder ! token(hops = token.hops + 1)
+    }
+  }
+}
+
+(*
+// ---- CONFIG ----------------------------------------------------------------
+Limit = 2
+
+Forwarder = { A, B, C } // make a ring
+Initiator = { I, J }
+
+// topology
+VIEW I -> A, 
+     J -> C // inject in a few places
+
+VIEW A -> B, 
+     B -> C, 
+     C -> A // ring
+
+*)
+
+}

@@ -1,0 +1,9 @@
+PROTOCOL foo {
+  INTERACTION i() {
+    ROLE R() {
+      HANDLE MSG Crash_S_R {
+        SHUTDOWN
+      }
+    }
+  }
+}

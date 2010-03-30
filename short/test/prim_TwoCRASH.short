@@ -1,0 +1,26 @@
+PROTOCOL prim_TwoCRASH {
+  ROLES S
+
+  INTERACTION i() {
+    ROLE X() {
+      STATE BOOLEAN x = FALSE
+      HANDLE CRASH Z z {
+        CHANGE x = 1
+      }
+    }
+
+    ROLE Y() {
+      STATE BOOLEAN y = False
+      HANDLE CRASH Z z {
+        CHANGE y = 1
+      }
+    }
+
+    ROLE Z() {
+      STATE BOOLEAN whatever = FALSE
+      HANDLE EVENT foo {
+	CHANGE whatever = TRUE
+      }
+    }
+  }
+}

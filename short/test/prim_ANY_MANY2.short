@@ -1,0 +1,32 @@
+(* shows how we're merging a single message handler with two any handlers *)
+protocol prim_ANY_MANY2 {
+  interaction i {
+
+    msg S -> R mx() 
+
+    role R {
+      when gx handle msg mx {
+        change sx = 0
+      }
+
+      when ga handle any msg m {
+        | gany1 ->
+            change sany1 = 1
+	    break
+        | otherwise ->
+	    continue
+      }
+
+      when gb handle any msg m {
+        | gany2 ->
+            change sany2 = 2
+	    break
+        | otherwise ->
+	    continue
+      }
+    }
+ 
+    role S {
+    }
+  }
+}

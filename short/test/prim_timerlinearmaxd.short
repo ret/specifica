@@ -1,0 +1,23 @@
+(* see, no range error. Runs into linear time stutter. *)
+(* shows that first timer that goes past MaxTime will freeze time for *)
+(* all others *)
+(* a timer scheduled at MaxTime does fire *)
+PROTOCOL prim_timerlinearmaxd {
+  INTERACTION foo() {
+    TLA { INT == 1..100 }
+    TLA { MaxTime == 25 }
+    ROLE R() {
+      STATE TIMER t
+      STATE INT x = 0
+      STATE INT y = 0
+
+      every 12 {
+	CHANGE x = @+1
+      }
+
+      every 10 {
+        CHANGE y = @+1
+      }
+    }
+  }
+}

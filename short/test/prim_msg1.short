@@ -1,0 +1,13 @@
+PROTOCOL prim_msg1 {
+
+ROLES R
+
+INTERACTION basic(R) {
+  MSG R -> R m()
+
+  ROLE R() {
+    HANDLE MSG x { CHANGE x = 1 }
+  }
+}
+
+}

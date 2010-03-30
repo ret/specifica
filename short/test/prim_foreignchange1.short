@@ -1,0 +1,21 @@
+PROTOCOL prim_foreignchange1 {
+  INTERACTION foo() {
+    ROLE R() {
+      STATE BOOLEAN t5_enab = FALSE
+    }
+    ROLE S() {
+      STATE BOOLEAN t10_enab = FALSE
+    }
+
+    ROLE GLOBAL() {
+      STATE Sched sched = NIL
+      STATE Time time = NIL
+      HANDLE EVENT tick {
+        | TimerNext(sched, time) = "R_t5" ->
+            FOREIGNCHANGE t5_enab = TRUE IN R VAR RoleNext(sched, time)
+        | TimerNext(sched, time) = "S_t10" ->
+            FOREIGNCHANGE t10_enab = TRUE IN S VAR RoleNext(sched, time)
+      }
+    }
+  }
+}

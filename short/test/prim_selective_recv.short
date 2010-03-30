@@ -1,0 +1,82 @@
+(* demonstrate selective receive *)
+
+(* NOTE that the expectation is that an assertion ("selective receive works!"
+   is hit! Any other assertion, or a no-error run is a failure!              *)
+
+protocol prim_selective_recv {
+  roles Sender, Receiver
+
+  interaction check_single_send {
+    msg Sender -> Receiver a()
+    msg Sender -> Receiver b()
+    msg Sender -> Receiver c()
+    msg Sender -> Receiver d()
+
+    role Sender {
+      handle once go {
+        let r = CHOOSE r \in Receiver: TRUE
+        r ! a (* clog Receiver's inbox *)
+        r ! b (* sent in 2nd position *)
+        r ! c (* sent in 3nd position *)
+        r ! d (* sent in 3nd position *)
+      }
+
+      (* forces test of correct code gen for case where this is the only *)
+      (* single msg handler in a role, i.e. no ENABLE checks needed      *)
+      handle msg foo {
+        drop foo
+      }
+    }
+
+    role Receiver {
+      STATE BOOLEAN b_received = FALSE
+      STATE BOOLEAN c_received = FALSE
+
+      (* never read msg a, that was sent first *)
+      when FALSE handle msg a {
+        assert(FALSE, "a received")
+       }
+
+      (* msg b is in 2nd position *)
+      using selective_receive
+      handle msg b {
+        change b_received = TRUE 
+      }
+
+      using selective_receive
+      handle msg c {
+        assert(b_received, "b should have been received first!")
+	change c_received = TRUE
+      }
+
+      using selective_receive
+      handle msg d {
+        assert(b_received /\ c_received, "b and c should have been received first!")
+      }
+
+      when c_received handle event ok {
+        assert(FALSE, "selective receive works!")
+      }
+
+      (* crash handlers induce a new message type and turn into single   *)
+      (* message handlers. Here we make sure this example works in their *)
+      (* presence also.                                                  *)
+      state BOOLEAN bar
+      handle crash Sender s {
+        change bar = FALSE
+      }
+    }
+  }
+
+  (* bugfix to generate obuf and copy actions *)
+  (* obuf is needed in any case and so is the copy action *)
+  interaction x {
+    msg Sender -> SET<Receiver> foo()
+
+    role Sender {
+      when FALSE handle event dummy {
+        Receiver !! foo
+      }
+    }
+  }
+}

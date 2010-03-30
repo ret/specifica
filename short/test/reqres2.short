@@ -1,0 +1,36 @@
+PROTOCOL reqres {
+
+ROLES Client, Server
+
+INTERACTION reqres(Client, Server) {
+  MSG Client -> Server req()
+  MSG Server -> Client res()
+
+  ROLE Client(Server init_server) {
+    STATE VIEW Server = init_server
+    STATE BOOLEAN done = FALSE
+
+    WHEN ~done HANDLE EVENT start {
+      VIEW(Server) ! req
+      CHANGE done = TRUE
+    }
+
+    HANDLE MSG res {
+      VIEW(Server) ! req
+    }
+  }
+
+  ROLE Server() {
+    HANDLE MSG req {
+      req.sender ! res
+    }
+  }
+}
+
+}
+--- CONFIG
+
+Server = {A}
+Client = {X}
+
+init_server[X] = A

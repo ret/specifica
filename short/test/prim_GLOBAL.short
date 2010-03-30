@@ -1,0 +1,17 @@
+PROTOCOL prim_GLOBAL {
+  INTERACTION I() {
+    ROLE A() {
+      STATE BOOLEAN x = FALSE
+      HANDLE EVENT callA {
+        CHANGE x = TRUE
+      }
+    }
+
+    ROLE GLOBAL() {
+      STATE BOOLEAN y = FALSE
+      HANDLE EVENT callGLOBAL {
+        CHANGE y = TRUE
+      }
+    }
+  }
+}
