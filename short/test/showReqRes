@@ -1,0 +1,1 @@
+./pstricks $1 -t reqres2.sla -s -dall -p 50 -q 50 -y 10 -u tiny -f tiny -w st_Client,st_Server -zX,A
