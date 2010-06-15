@@ -1,0 +1,36 @@
+// single key model
+
+protocol lu {
+
+roles Client, Server
+
+constant init_server
+
+interaction x {
+  msg Client -> Server wr()
+  msg Server -> Client wr_ack(BOOLEAN b)
+  msg Client -> Server rd()
+  msg Server -> Client rd_res()
+
+  role Client {
+    state view Server = init_server
+    state BOOLEAN done = FALSE
+
+    when ~done handle event start {
+      view(Server) ! req
+      change done = TRUE
+    }
+
+    handle msg res {
+      view(Server) ! req
+    }
+  }
+
+  role Server {
+    handle msg req {
+      reply res
+    }
+  }
+}
+
+}
