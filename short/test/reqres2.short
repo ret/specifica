@@ -1,28 +1,31 @@
-PROTOCOL reqres {
+protocol reqres2 {
 
-ROLES Client, Server
+roles Client, Server
 
-INTERACTION reqres(Client, Server) {
-  MSG Client -> Server req()
-  MSG Server -> Client res()
+constant init_server
 
-  ROLE Client(Server init_server) {
-    STATE VIEW Server = init_server
-    STATE BOOLEAN done = FALSE
+interaction reqres {
+  msg Client -> Server req()
+  msg Server -> Client res()
 
-    WHEN ~done HANDLE EVENT start {
-      VIEW(Server) ! req
-      CHANGE done = TRUE
+  role Client {
+    state view Server = init_server
+    state BOOLEAN done = FALSE
+
+    when ~done handle event start {
+      view(Server) ! req
+      change done = TRUE
     }
 
-    HANDLE MSG res {
-      VIEW(Server) ! req
+    handle msg res {
+      view(Server) ! req
     }
   }
 
-  ROLE Server() {
-    HANDLE MSG req {
-      req.sender ! res
+  role Server {
+    handle msg req {
+      assert(FALSE, "!")
+      reply res
     }
   }
 }
@@ -33,4 +36,4 @@ INTERACTION reqres(Client, Server) {
 Server = {A}
 Client = {X}
 
-init_server[X] = A
+//init_server[X] = A
