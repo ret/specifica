@@ -30,12 +30,7 @@ protocol lu {
         view(Server) !! rd()
         await msg rdRes from all(Server)
 
-// Lets not trigger the "Life is good!" assertion
-//      change done = TRUE
-      }
-
-      when done handle event endstate {
-        assert(FALSE, "Life is good!")
+        change done = TRUE
       }
     }
 
@@ -72,6 +67,15 @@ protocol lu {
                  /\ st_Server[b].pvalue = NIL 
                 THEN st_Server[a].cvalue = st_Server[b].cvalue
                 ELSE TRUE
+    }
+
+    // Instead of the "Life is good" assertion in the client, let's find a 
+    // state where both clients have completed their run. We need to negate
+    // the condition to violate the invariant in the stample state we seek.
+    // I.e. keep searching while there are client left that are not done.
+    // Run TLC a few times to see different interleavings of clients.
+    tla { Trap == 
+            \E c \in Client: ~st_Client[c].done
     }
   }
 }
