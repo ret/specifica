@@ -45,7 +45,7 @@ protocol lu {
 
       // Prepare does not fail. We buffer prepare messages if already prepared 
       // Assumes in-order message delivery and requires selective receive.
-      handle msg prepare { 
+      when (pvalue = NIL) handle msg prepare { 
         change pvalue = prepare.val
         reply prepareAck()
       }
