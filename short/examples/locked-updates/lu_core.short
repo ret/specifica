@@ -73,3 +73,5 @@ protocol lu {
     }
   }
 }
+
+// short lu_core.short >lu.tla && tlc lu.tla 2>t && ./show t
