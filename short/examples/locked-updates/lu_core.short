@@ -1,48 +1,75 @@
-// single key model
+// Single key model
 
 protocol lu {
-
   roles Client, Server
-
-  constant init_Server
+  constant NIL, init_Server
 
   interaction core {
-    msg Client -> Set<Server> wr    (BOOLEAN val)
-    msg Server ->     Client  wrack ()
-    msg Client -> Set<Server> rd    ()
-    msg Server ->     Client  rdres (BOOLEAN val)
+    msg Client -> Set<Server> prepare     (BOOLEAN val) // prepare
+    msg Server ->     Client  prepareAck  ()
+
+    msg Client -> Set<Server> commit      ()            // the prepared val
+    msg Server ->     Client  commitAck   ()            // the prepared val
+
+    msg Client -> Set<Server> rd          ()
+    msg Server ->     Client  rdRes       (BOOLEAN val)
 
     role Client {
       state view Set<Server> = init_Server
       state BOOLEAN done
 
-      handle event rdwr(BOOLEAN v) {
-        view(Server) !! wr(val=v)
-        await msg wrack from all(Server)
+      // An example client access sequence. A wr followed by read.
+      handle event wrrd(BOOLEAN v) {
+        // ---- prepare
+        view(Server) !! prepare(val=v)
+        await msg prepareAck from all(Server)
+        // ---- commit
+        view(Server) !! commit()
+        await msg commitAck from all(Server)
+        // ---- read
         view(Server) !! rd()
-        await msg rdres from all(Server)
+        await msg rdRes from all(Server)
+
         change done = TRUE
       }
 
       when done handle event endstate {
-        assert(FALSE, "!")
+        assert(FALSE, "Life is good!")
       }
     }
 
     role Server {
-      state BOOLEAN svalue
+      state NIL<BOOLEAN> cvalue = NIL // NIL only initially when never commited
+      state NIL<BOOLEAN> pvalue = NIL // NIL means no prepare pending
+
+      // Prepare does not fail. We buffer prepare messages if already prepared 
+      // Assumes in-order message delivery and requires selective receive.
+      handle msg prepare { 
+        change pvalue = prepare.val
+        reply prepareAck()
+      }
+
+      handle msg commit {
+        assert(pvalue # NIL, "Commit is missing previous prepare.")
+        change cvalue = pvalue, pvalue = NIL
+        reply commitAck()
+      }
 
       handle msg rd { 
-        reply rdres(val=svalue)
-      }
-
-      handle msg wr {
-        reply wrack()
-        change svalue = wr.val
+        reply rdRes(val=cvalue) // always show committed value
       }
     }
+  }
 
-    // pick an element of the set non deterministically
-    tla { some(set) == CHOOSE s \in set: TRUE } 
+  // List of invariants
+  interaction check_these {
+    // All committed servers have the same value
+    tla { Consistency ==
+            \A a,b \in Server: 
+              IF    st_Server[a].pvalue = NIL (* both committed *)
+                 /\ st_Server[b].pvalue = NIL 
+                THEN st_Server[a].cvalue = st_Server[b].cvalue
+                ELSE TRUE
+    }
   }
 }
