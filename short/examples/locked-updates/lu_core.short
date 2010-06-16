@@ -50,6 +50,7 @@ protocol lu {
         reply prepareAck()
       }
 
+      using selective_receive
       handle msg commit {
         assert(pvalue # NIL, "Commit is missing previous prepare.")
         change cvalue = pvalue, pvalue = NIL
