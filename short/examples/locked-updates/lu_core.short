@@ -14,28 +14,31 @@ protocol lu {
     msg Client -> Set<Server> rd          ()
     msg Server ->     Client  rdRes       (BOOLEAN val)
 
+    tla { rdVal(rdResSet) == any2(rdResSet,"val") } 
+
     role Client {
       state view Set<Server> = init_Server
-      state BOOLEAN done
 
       // An example client access sequence. A wr followed by read.
       handle event wrrd(BOOLEAN v) {
-        // ---- prepare
-        view(Server) !! prepare(val=v)
-        await msg prepareAck from all(Server)
-        // ---- commit
-        view(Server) !! commit()
-        await msg commitAck from all(Server)
         // ---- read
         view(Server) !! rd()
         await msg rdRes from all(Server)
 
-        change done = TRUE
+        // --- modify data
+        let newVal = ~rdVal(rdRes) // also ASSERTs all values must be equal!
+
+        // ---- wr/prepare
+        view(Server) !! prepare(val=newVal)
+        await msg prepareAck from all(Server)
+        // ---- wr/commit
+        view(Server) !! commit()
+        await msg commitAck from all(Server)
       }
     }
 
     role Server {
-      state NIL<BOOLEAN> cvalue = NIL // NIL only initially when never commited
+      state     BOOLEAN  cvalue = FALSE // any init value will do
       state NIL<BOOLEAN> pvalue = NIL // NIL means no prepare pending
 
       // Prepare does not fail. We buffer prepare messages if already prepared 
@@ -67,15 +70,6 @@ protocol lu {
                  /\ st_Server[b].pvalue = NIL 
                 THEN st_Server[a].cvalue = st_Server[b].cvalue
                 ELSE TRUE
-    }
-
-    // Instead of the "Life is good" assertion in the client, let's find a 
-    // state where both clients have completed their run. We need to negate
-    // the condition to violate the invariant in the stample state we seek.
-    // I.e. keep searching while there are client left that are not done.
-    // Run TLC a few times to see different interleavings of clients.
-    tla { Trap == 
-            \E c \in Client: ~st_Client[c].done
     }
   }
 }
