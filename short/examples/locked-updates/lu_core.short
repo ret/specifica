@@ -30,7 +30,8 @@ protocol lu {
         view(Server) !! rd()
         await msg rdRes from all(Server)
 
-        change done = TRUE
+// Lets not trigger the "Life is good!" assertion
+//      change done = TRUE
       }
 
       when done handle event endstate {
