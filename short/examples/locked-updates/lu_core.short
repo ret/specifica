@@ -5,14 +5,20 @@ protocol lu {
   constant NIL, init_Server
 
   interaction core {
-    msg Client -> Set<Server> prepare     (BOOLEAN val) // prepare
-    msg Server ->     Client  prepareAck  ()
+    msg Client -> Set<Server> prepare     (BOOLEAN val)    // prepare
+    msg Server ->     Client  prepareAck  (BOOLEAN locked)
 
-    msg Client -> Set<Server> commit      ()            // the prepared val
-    msg Server ->     Client  commitAck   ()            // the prepared val
+    msg Client -> Set<Server> commit      ()               // the prepared val
+    msg Server ->     Client  commitAck   ()               // the prepared val
 
     msg Client -> Set<Server> rd          ()
     msg Server ->     Client  rdRes       (BOOLEAN val)
+
+    display swimlane { 
+      msg prepare    color = blue
+      msg prepareAck color = IF locked THEN green ELSE red
+      msg prepareAck style = IF locked THEN solid ELSE dashed
+    }
 
     tla { rdVal(rdResSet) == any2(rdResSet,"val") } 
 
@@ -20,7 +26,7 @@ protocol lu {
       state view Set<Server> = init_Server
 
       // An example client access sequence. A wr followed by read.
-      handle event wrrd(BOOLEAN v) {
+      handle event rdwr(BOOLEAN v) {
         // ---- read
         view(Server) !! rd()
         await msg rdRes from all(Server)
@@ -30,22 +36,27 @@ protocol lu {
 
         // ---- wr/prepare
         view(Server) !! prepare(val=newVal)
-        await msg prepareAck from all(Server)
+        await msg prepareAck from all(Server) where all prepareAck.locked
+
         // ---- wr/commit
         view(Server) !! commit()
         await msg commitAck from all(Server)
+
       }
     }
 
     role Server {
-      state     BOOLEAN  cvalue = FALSE // any init value will do
-      state NIL<BOOLEAN> pvalue = NIL // NIL means no prepare pending
+      state     BOOLEAN  cvalue = FALSE         // any init value will do
+      state NIL<BOOLEAN> pvalue = NIL           // NIL means no prepare pending
 
       // Prepare does not fail. We buffer prepare messages if already prepared 
       // Assumes in-order message delivery and requires selective receive.
-      when (pvalue = NIL) handle msg prepare { 
-        change pvalue = prepare.val
-        reply prepareAck()
+      handle msg prepare { 
+        | pvalue = NIL ->
+            change pvalue = prepare.val
+            reply prepareAck(locked=TRUE)
+        | pvalue # NIL ->                       // locked already, fail prepare
+            reply prepareAck(locked=FALSE)
       }
 
       using selective_receive
@@ -57,6 +68,32 @@ protocol lu {
 
       handle msg rd { 
         reply rdRes(val=cvalue) // always show committed value
+      }
+    }
+  }
+
+  interaction deadlockHandling {
+    msg Client -> Set<Server> release()
+
+    display swimlane { 
+      msg release color = yellow
+    }
+
+    role Client {
+      use msg prepareAck of core
+      handle msg prepareAck from all(Server) where some ~prepareAck.locked {
+        let lockOK = { m.sender : m \in { m \in all(prepareAck) : m.locked } }
+        // assume in-order msg delivery, no need to await ack for release
+        lockOK !! release()
+        (* rewind rdwr *)
+      }
+    }
+
+    role Server {
+      use state pvalue of core
+
+      handle msg release {
+        change pvalue = NIL (* drop the lock *)
       }
     }
   }
