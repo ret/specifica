@@ -7,7 +7,6 @@ import Data.List( (\\) )
 import Syntax
 import RewriteTimer(allRoles)
 import TLACodeGen(typeKernel, subst, Pattern, xify, allSingleMsgHandlerNames)
-import Data.Set(empty)
 import Text.ParserCombinators.Parsec
 import Language.TLAPlus.Parser( cfgspec, mkState )
 import Language.TLAPlus.Syntax
