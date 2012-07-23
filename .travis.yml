@@ -1,0 +1,45 @@
+language: haskell
+notifications:
+  email:
+    - kramer@acm.org
+
+before_install:
+  - wget http://www.haskell.org/ghc/dist/7.4.1/ghc-7.4.1-i386-unknown-linux.tar.bz2
+  - bunzip2 ghc-7.4.1-i386-unknown-linux.tar.bz2
+  - tar -xf ghc-7.4.1-i386-unknown-linux.tar
+  - rm -rf ghc-7.4.1-i386-unknown-linux.tar
+  - sudo apt-get install libgmp3c2 freeglut3 freeglut3-dev -y
+  - pushd ghc-7.4.1
+  - sudo ./configure --prefix=/usr
+  - sudo make install
+  - popd
+  - rm -rf ghc-7.4.1*
+  - cabal update
+  - sudo apt-get install libgmp3c2 freeglut3 freeglut3-dev -y
+  - wget http://lambda.haskell.org/platform/download/2012.2.0.0/haskell-platform-2012.2.0.0.tar.gz
+  - tar -xzf haskell-platform-2012.2.0.0.tar.gz
+  - pushd haskell-platform-2012.2.0.0
+  - sudo ./configure --prefix=/usr
+  - sudo make install
+  - popd
+  - sudo rm -rf haskell-platform-2012.2.0.0*
+  - ghc --version
+  - cabal --version
+
+install:
+  - "cabal update"
+
+script:
+  - pushd tlaplus
+  - cabal install
+  - popd
+  - pushd tlaplus-eval
+  - cabal install
+  - popd
+  - pushd tlaplus-swimlane
+  - cabal install
+  - popd
+  - pushd short
+  - cabal install
+  - popd
+  - echo "done - all specifica modules built and installed.."
