@@ -30,5 +30,5 @@ library
 
 executable           tli
   main-is:           tli.hs
-  build-depends:     base, haskell98, parsec >= 3.0.1
+  build-depends:     base, parsec >= 3.0.1
   hs-source-dirs:    src
