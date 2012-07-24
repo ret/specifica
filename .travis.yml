@@ -41,6 +41,7 @@ script:
   - pushd tlaplus-swimlane/src
   - alex lexer.x
   - happy parser.y
+  - ls -al
   - popd
   - pushd tlaplus-swimlane
   - cabal install
