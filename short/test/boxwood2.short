@@ -3,7 +3,7 @@ PROTOCOL boxwood2 CONCERN core {
 
 CONSTANT InitObserver, NIL, GracePeriod, BeaconPeriod, QueryTimeout
 
-ROLES Machine, Observe, Client
+ROLES Machine, Observer, Client
 
 INTERACTION dummy() {
   tla { Perms == Permutations(Machine) 
