@@ -1,6 +1,7 @@
 module GenCFG(genCFGFile, crashStartControlConst) where
 
-import System (getArgs, exitFailure)
+import System.Environment (getArgs)
+import System.Exit(exitFailure)
 import Flatten
 import Data.Generics
 import Data.List( (\\) )

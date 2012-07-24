@@ -17,6 +17,6 @@ cabal-version:       >= 1.2
 executable           short
   main-is:           short.hs
   build-depends:     base, containers, dataenc, Crypto, parsec >= 3.0.1, 
-                     haskell98, regex-compat, wl-pprint, syb, tlaplus
+                     regex-compat, wl-pprint, syb, tlaplus
   extensions:        DeriveDataTypeable
   hs-source-dirs:    src

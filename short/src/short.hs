@@ -1,8 +1,9 @@
 module Main where
 
 import Char (toLower)
-import System (getArgs, exitFailure)
-import IO (hFlush, stdout)
+import System.Environment (getArgs)
+import System.Exit(exitFailure)
+import System.IO (hFlush, stdout)
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language( emptyDef )

@@ -4,7 +4,7 @@ where
 
 import Data.Char (toLower, toUpper, isAlpha)
 import Debug.Trace as Trace
-import System (getArgs)
+import System.Environment (getArgs)
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language( emptyDef )
