@@ -18,5 +18,5 @@ executable           short
   main-is:           short.hs
   build-depends:     base, containers, dataenc, Crypto, parsec >= 3.0.1, 
                      haskell98, regex-compat, wl-pprint, syb, tlaplus
-  extensions:        Generics, DeriveDataTypeable
+  extensions:        DeriveGenerics, DeriveDataTypeable
   hs-source-dirs:    src
