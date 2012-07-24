@@ -39,8 +39,8 @@ script:
   - cabal install
   - popd
   - pushd tlaplus-swimlane/src
-  - alex lexer.x
-  - happy parser.y
+  - alex lexer.x -o Lexer.hs
+  - happy parser.y -o Parser.hs
   - ls -al
   - popd
   - pushd tlaplus-swimlane
