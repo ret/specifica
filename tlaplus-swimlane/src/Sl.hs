@@ -5,15 +5,17 @@ import Data.Set  as Set
 import Debug.Trace as Trace
 import System.Console.GetOpt
 import GHC.Base  as Prelude
-import IO
+import System.IO
 import Lexer (alexScanTokens)
 import Parser (Stmt(..), Ident(..), Expr(..), parser, listparser, exprparser)
-import System
 import System.IO.Unsafe (unsafePerformIO)
 import Text.Regex as Regex
 
 import TraceReader
 import ExprHelper
+
+import System.Environment
+import System.Exit
 
 import SLA (readSLA)
 

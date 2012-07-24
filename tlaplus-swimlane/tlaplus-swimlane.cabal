@@ -17,7 +17,7 @@ cabal-version:       >= 1.2
 
 executable           sl
   main-is:           Sl.hs
-  build-depends:     haskell98, base, containers, array, regex-compat,
+  build-depends:     base, containers, array, regex-compat,
                      tlaplus, tlaplus-eval, parsec >= 3.0.1
   other-modules:     Lexer Parser ExprHelper SLA TraceReader
   hs-source-dirs:    src
@@ -26,3 +26,4 @@ executable           sl
                      -fno-warn-missing-signatures
                      -fno-warn-name-shadowing
                      -fno-warn-unused-imports
+                     -XBangPatterns

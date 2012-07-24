@@ -17,7 +17,10 @@ import Data.Map as Map (lookup)
 import qualified Data.Set as Set (map, toList)
 
 import Debug.Trace as Trace
-import IO (hPutStrLn, stderr, isDoesNotExistError, catch, ioError)
+import System.IO (hPutStrLn, stderr) 
+import System.IO.Error (catch, ioError, isDoesNotExistError)
+import System.Environment
+import System.Exit
 
 readSLA :: String -> IO (Either String (Maybe StateAnnFun, Maybe SLAFun))
 readSLA fname =
