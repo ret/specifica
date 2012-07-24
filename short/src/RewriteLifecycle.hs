@@ -1,7 +1,7 @@
 module RewriteLifecycle where
 
 import Data.List (nub, (\\), groupBy )
-import Char (toLower, toUpper)
+import Data.Char (toLower, toUpper)
 import qualified Data.Set as Set
 import Data.Generics
 import Data.Typeable as Typeable

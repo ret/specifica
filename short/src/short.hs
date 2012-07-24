@@ -1,6 +1,6 @@
 module Main where
 
-import Char (toLower)
+import Data.Char (toLower)
 import System.Environment (getArgs)
 import System.Exit(exitFailure)
 import System.IO (hFlush, stdout)

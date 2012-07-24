@@ -1,6 +1,6 @@
 module RewriteMsgSetHandler(rewriteMsgSetHandler) where
 
-import Char(toLower)
+import Data.Char(toLower)
 import Data.List( (\\) )
 import Data.Generics
 import Syntax

@@ -7,7 +7,7 @@ module TLACodeGen(groupSendInstr,
 		 ) where
 
 import Debug.Trace(trace)
-import Char (toLower, toUpper)
+import Data.Char (toLower, toUpper)
 import Data.List (nub, (\\), intersperse, insertBy, foldl')
 import Data.Maybe (fromJust)
 import Data.Generics hiding (GT) -- avoid clash with Prelude

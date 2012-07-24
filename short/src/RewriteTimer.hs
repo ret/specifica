@@ -1,6 +1,6 @@
 module RewriteTimer where
 
-import Char (toLower)
+import Data.Char (toLower)
 import Data.Generics
 import Syntax
 import Flatten
