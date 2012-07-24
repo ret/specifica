@@ -21,7 +21,7 @@ import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language( emptyDef )
 import Text.ParserCombinators.Parsec.Pos(SourcePos)
 import qualified Text.ParserCombinators.Parsec.Token as P
-import List (nub, (\\))
+import Data.List (nub, (\\))
 import Data.Set as Set (fromList)
 
 import Language.TLAPlus.ParserState 

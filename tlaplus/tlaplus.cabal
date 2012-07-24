@@ -23,7 +23,7 @@ library
 -- exported for use in short's parser -- FIXME (use "other-modules:")
                      Language.TLAPlus.ParserState
 
-  build-depends:     base >= 4, haskell98, syb, containers, wl-pprint,
+  build-depends:     base >= 4, syb, containers, wl-pprint,
                      parsec >= 3.0.1
   hs-source-dirs:    src
   ghc-options:       -Wall

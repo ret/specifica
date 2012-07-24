@@ -42,4 +42,3 @@ script:
   - pushd short
   - cabal install
   - popd
-  - echo "done - all specifica modules built and installed.."
