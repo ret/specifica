@@ -1,6 +1,6 @@
 module Rewrite where
 
-import Char(toLower)
+import Data.Char(toLower)
 import Debug.Trace (trace)
 import Data.Generics
 import Syntax
