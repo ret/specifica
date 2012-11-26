@@ -1,15 +1,15 @@
 #!/bin/bash -e
 pushd tlaplus
-cabal install
+cabal install $*
 popd
 pushd tlaplus-eval
-cabal install
+cabal install $*
 popd
 pushd tlaplus-swimlane
-cabal install
+cabal install $*
 popd
 pushd short
-cabal install
+cabal install $*
 popd
 echo "done - all specifica modules built and installed.."
 
