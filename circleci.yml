@@ -1,0 +1,13 @@
+machine:
+  pre:
+    - wget http://www.haskell.org/ghc/dist/7.4.1/ghc-7.4.1-i386-unknown-linux.tar.bz2
+    - bunzip2 ghc-7.4.1-i386-unknown-linux.tar.bz2
+    - tar -xf ghc-7.4.1-i386-unknown-linux.tar
+    - rm -rf ghc-7.4.1-i386-unknown-linux.tar
+    - sudo apt-get install libgmp3c2 freeglut3 freeglut3-dev -y
+    - pushd ghc-7.4.1
+    - sudo ./configure --prefix=/usr
+    - sudo make install
+    - popd
+    - rm -rf ghc-7.4.1*
+    - cabal update
