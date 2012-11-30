@@ -26,6 +26,7 @@ machine:
 
 test:
   pre:
+    - ruby --version
     - cabal update
   override:
     - pushd tlaplus
