@@ -11,4 +11,21 @@ machine:
     - popd
     - rm -rf ghc-7.4.1*
     - cabal update
+    - sudo apt-get install libgmp3c2 freeglut3 freeglut3-dev -y
+    - wget http://lambda.haskell.org/platform/download/2012.2.0.0/haskell-platform-2012.2.0.0.tar.gz
+    - tar -xzf haskell-platform-2012.2.0.0.tar.gz
+    - pushd haskell-platform-2012.2.0.0
+    - sudo ./configure --prefix=/usr
+    - sudo make install
+    - popd
+    - sudo rm -rf haskell-platform-2012.2.0.0*
+    - ghc --version
+    - cabal --version
 
+test:
+  pre:
+    - cabal update
+  override:
+    - pushd tlaplus
+    - cabal install
+    - popd
