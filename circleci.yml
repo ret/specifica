@@ -11,3 +11,4 @@ machine:
     - popd
     - rm -rf ghc-7.4.1*
     - cabal update
+
