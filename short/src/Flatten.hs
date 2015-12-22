@@ -9,6 +9,8 @@ import SyntaxPretty (ppInteractionElement, ppMsgDecl, ppConcernElement)
 
 import Text.PrettyPrint.Leijen as PPrint
 
+import Prelude hiding ((<$>))
+
 type Role = SH_InteractionElement
 type VerbTLA = SH_InteractionElement
 type Const = String

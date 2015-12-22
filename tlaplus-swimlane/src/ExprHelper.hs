@@ -6,10 +6,13 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
+head3 [] = error "!3"
+head3 l = head l
+
 join sep []  = ""
 join sep [s] = s
 join sep l   = let rl = reverse l
-                in foldl (\e acc -> acc++sep++e) (head rl) (tail rl)
+                in foldl (\e acc -> acc++sep++e) (head3 rl) (tail rl)
 
 type Abbrev = Map String String
 ppE :: Expr -> Abbrev -> String

@@ -18,7 +18,8 @@ import qualified Data.Set as Set (map, toList)
 
 import Debug.Trace as Trace
 import System.IO (hPutStrLn, stderr) 
-import System.IO.Error (catch, ioError, isDoesNotExistError)
+import Control.Exception (catch)
+import System.IO.Error (ioError, isDoesNotExistError)
 import System.Environment
 import System.Exit
 
@@ -267,4 +268,7 @@ convertItoVA (Ident s) = VA_String s
 join sep []  = ""
 join sep [s] = s
 join sep l   = let rl = reverse l
-                in foldl (\e acc -> acc++sep++e) (head rl) (tail rl)
+                in foldl (\e acc -> acc++sep++e) (head2 rl) (tail rl)
+
+head2 [] = error "!"
+head2 l = head l

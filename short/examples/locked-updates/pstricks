@@ -1,5 +1,5 @@
 #/bin/bash -e
-sl $* >tmp.tex
+../../../tlaplus-swimlane/dist/build/sl/sl $* >tmp.tex
 pslatex tmp.tex
 dvips -o tmp.ps tmp.dvi
 pstopdf tmp.ps

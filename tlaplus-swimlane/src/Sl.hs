@@ -1,10 +1,13 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
+import Control.Exception (catch, IOException)
 import Data.Maybe ( fromMaybe, fromJust ) -- for the getOpt package use
 import Data.List as List
 import Data.Map  as Map
 import Data.Set  as Set
 import Debug.Trace as Trace
 import System.Console.GetOpt
-import GHC.Base  as Prelude
+import GHC.Base  as Prelude hiding (join)
 import System.IO
 import Lexer (alexScanTokens)
 import Parser (Stmt(..), Ident(..), Expr(..), parser, listparser, exprparser)
@@ -305,7 +308,8 @@ main = do argv <- getArgs
                        (do f <- readFile annfile
                            note $ "reading annotation file "++annfile
                            return f)
-                       (\e -> do case annotationfile config of
+                       (\(e::IOException) -> do 
+                                 case annotationfile config of
                                    Nothing -> -- default annotation file
                                      note $ "no default annotation file "++
                                             annfile++" found."
@@ -515,8 +519,8 @@ mkE swimlane exprset = EventGrp swimlane (Set.map f exprset)
            case r!(Ident "msg") of
              SeqE msg -> let StrE etype = r!(Ident "etype")
                              SeqE tuple = r!(Ident "msg")
-                             RecE msg = head tuple
-                             SetE destset = (head.tail) tuple
+                             RecE msg = head22 tuple
+                             SetE destset = (head22.tail) tuple
                              dest = Set.map (\(AtomE d) -> d) destset 
                           in MultiSendEvent r etype msg dest
              RecE msg -> let StrE etype = r!(Ident "etype")
@@ -676,7 +680,7 @@ to_pstricks_swimlanes saf cycle abbrev numlanes defaultNotes m notes vertnotes
           pairs :: StateNotes -> String -> [Int] -> [String]
           pairs vertnotes sli [i]    = []
           pairs vertnotes sli (i:is) =
-              let j = head is
+              let j = head22 is
                   l = "\\ncline[linewidth=3pt,"++"linecolor=lightgray]{"++
                       "-}{"++(ref i sli)++"}{"++(ref j sli)++"}"
                   note = case Map.lookup i vertnotes of
@@ -915,11 +919,16 @@ toInteractions mel = List.map convert mel
                       let event = NoMessageEvent msgmap sl -- fake event
                        in (i, event)
 
+head2 [] = error "!2"
+head2 l = head l
+head22 [] = error "!22"
+head22 l = head l
+
 textToStates :: String -> (Maybe String, String, [State], Int)
 textToStates fc =
-    let e = Regex.splitRegex (Regex.mkRegex "STATE ") fc
+    let e = Regex.splitRegex (Regex.mkRegex "State ") fc
         issue = concat $ tail $ Regex.splitRegex (Regex.mkRegex "Error: ") 
-                                                 (head e)
+                                                 (head22 e)
         stl = List.map (\s ->
                let lines2 = -- when Assertion is violated, trunc the line sect.
                      takeWhile (\l -> case l of
@@ -956,7 +965,7 @@ textToStates fc =
                             in ([], Nothing, a' - b'') )
               $ tail e
         st = concat $ List.map (\(l, _, _) -> l) stl
-        (_, vars, _) = head stl -- all vars are the same
+        (_, vars, _) = head22 stl -- all vars are the same
         (_, _, cycle) = last stl
         (errtxt, names) = case vars of
           Just names -> (Nothing, names)

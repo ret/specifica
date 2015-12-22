@@ -27,8 +27,10 @@ library
                      -fno-warn-missing-signatures
                      -fno-warn-name-shadowing
                      -fno-warn-unused-imports
+  extensions:        FlexibleContexts
 
 executable           tli
   main-is:           tli.hs
   build-depends:     base, parsec >= 3.0.1
   hs-source-dirs:    src
+  extensions:        FlexibleContexts

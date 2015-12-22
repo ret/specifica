@@ -7,6 +7,8 @@ import Data.List (find, elemIndex)
 import Data.Map as Map (foldWithKey)
 import Data.Set as Set (elems, fromList)
 
+import Prelude hiding ((<$>))
+
 import Text.PrettyPrint.Leijen
 
 import Syntax

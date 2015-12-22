@@ -2,9 +2,9 @@ module Language.TLAPlus.Pretty
   ( prettyPrintAS, ppE, prettyPrintE,
     ppUnit,
     prettyPrintVA, ppVA, prettyPrintVATeX,
-    prettyPrintCFG, ppCFG_Value)
-where
+    prettyPrintCFG, ppCFG_Value) where
 
+import Prelude hiding ((<$>))
 import Data.List (find, elemIndex)
 import Data.Map as Map (foldWithKey)
 import Data.Set as Set (elems)

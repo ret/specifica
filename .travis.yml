@@ -6,6 +6,7 @@ notifications:
 before_install:
   - alex -v
   - happy -v
+  - happy -v
   - wget http://www.haskell.org/ghc/dist/7.4.1/ghc-7.4.1-i386-unknown-linux.tar.bz2
   - bunzip2 ghc-7.4.1-i386-unknown-linux.tar.bz2
   - tar -xf ghc-7.4.1-i386-unknown-linux.tar

@@ -32,4 +32,4 @@ library
                      -fno-warn-name-shadowing
                      -fno-warn-unused-imports
   extensions:        DeriveDataTypeable
-
+                     FlexibleContexts

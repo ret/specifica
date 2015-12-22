@@ -19,4 +19,5 @@ executable           short
   build-depends:     base, containers, dataenc, Crypto, parsec >= 3.0.1, 
                      regex-compat, wl-pprint, syb, tlaplus
   extensions:        DeriveDataTypeable
+                     FlexibleContexts
   hs-source-dirs:    src

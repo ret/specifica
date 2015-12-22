@@ -147,8 +147,8 @@ main =
 
                -- use m in SLA gen to make sure that TAG'd msg fields can
 	       -- be used in the display annotations also.
-               ; genSLAFile (map toLower pname) m tla
-               ; genCFGFile (map toLower pname) m
+               --; genSLAFile (map toLower pname) m tla
+               --; genCFGFile (map toLower pname) m
 	       }
       }
 

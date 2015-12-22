@@ -1,15 +1,25 @@
-#!/bin/bash -e
+#!/bin/bash -ev
 pushd tlaplus
-cabal install $*
+cabal sandbox init
+cabal install -j
 popd
+
 pushd tlaplus-eval
-cabal install $*
+cabal sandbox init
+cabal sandbox add-source ../tlaplus/
+cabal install -j
 popd
+
 pushd tlaplus-swimlane
-cabal install $*
+cabal sandbox init
+cabal sandbox add-source ../tlaplus/
+cabal sandbox add-source ../tlaplus-eval/
+cabal install -j
 popd
+
 pushd short
-cabal install $*
+cabal sandbox init
+cabal sandbox add-source ../tlaplus/
+cabal install -j
 popd
 echo "done - all specifica modules built and installed.."
-
