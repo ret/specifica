@@ -1,0 +1,17 @@
+#!/bin/bash -ev
+pushd tlaplus
+rm -rf cabal.sandbox.config .cabal-sandbox/
+popd
+
+pushd tlaplus-eval
+rm -rf cabal.sandbox.config .cabal-sandbox/
+popd
+
+pushd tlaplus-swimlane
+rm -rf cabal.sandbox.config .cabal-sandbox/
+popd
+
+pushd short
+rm -rf cabal.sandbox.config .cabal-sandbox/
+popd
+
