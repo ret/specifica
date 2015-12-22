@@ -1,0 +1,136 @@
+---- MODULE replication ----
+ CONSTANT Client, Server
+ 
+ fontsize == "tiny"
+ 
+ d(seqA, seqB) == \* (seqA \ seqB) for sequences (def over set of elements)
+   LET range(seq) == { seq[i] : i \in DOMAIN(seq) }
+    IN range(seqA) \ range(seqB)
+ 
+ mc(set) == { <<s, {}>> : s \in set }
+ 
+ nonEmpty(set) == { s \in set: s[2] # {} } 
+ 
+ singleton(s) == CHOOSE x \in s: TRUE
+ 
+ remIfIn2ndA(multi, single) ==
+   IF single = {} 
+   THEN multi
+   ELSE IF multi = {} 
+        THEN multi
+        ELSE LET multi2 == singleton(multi)
+              IN {<<multi2[1], 
+                    { m \in multi2[2] : 
+                        ~ \E s \in single: m[1] = singleton(s[2])[1] }>>}
+ 
+ remIfIn2ndB(single, multi) == 
+   IF single = {} 
+   THEN single
+   ELSE IF multi = {} 
+        THEN single
+        ELSE LET multi2 == singleton(multi)
+              IN IF \E m \in multi2[2]: 
+                       singleton(singleton(single)[2])[1] = m[1]
+                 THEN {}
+                 ELSE single
+ 
+ remMCDest(set) ==
+   LET card(set) == IF Cardinality(set) = 0 
+                    THEN 1 
+                    ELSE Cardinality(set)
+       strip(s) ==
+         IF s[2] = {}
+         THEN s
+         ELSE LET ms == { <<m[1], card(m[2]), m[2]>> : m \in s[2] } 
+               IN <<s[1], ms, s[3]>>
+    IN { strip(s) : s \in set} 
+ 
+ (* code gen !!! *)
+ sent(states, pair) ==
+   LET g_obuf_add == nonEmpty(
+)       g_obuf_rem == nonEmpty(
+)       inbox_add == nonEmpty(
+                {<<pair, mc(d(states[pair.next].state.st_Client[a].g_inbox,
+                             states[pair.curr].state.st_Client[a].g_inbox)), a
+              >> : a \in Client }
+ \cup                 {<<pair, mc(d(states[pair.next].state.st_Server[a].g_inbox,
+                             states[pair.curr].state.st_Server[a].g_inbox)), a
+              >> : a \in Server }
+)    IN remMCDest(       remIfIn2ndA(g_obuf_add, inbox_add)
+                  \cup remIfIn2ndB(inbox_add, g_obuf_rem))
+ 
+ recv(states, pair) ==
+   LET inbox_rem == nonEmpty(
+                {<<pair, d(states[pair.curr].state.st_Client[a].g_inbox,
+                             states[pair.next].state.st_Client[a].g_inbox), a
+              >> : a \in Client }
+ \cup                 {<<pair, d(states[pair.curr].state.st_Server[a].g_inbox,
+                             states[pair.next].state.st_Server[a].g_inbox), a
+              >> : a \in Server }
+)    IN inbox_rem
+ 
+ flattenS(set) ==
+   UNION { { << e, s[1].curr, e[1].sender, s[3] >>: 
+           e \in s[2] } : s \in set }
+ 
+ flattenR(set) ==
+   UNION { { << e, s[1].curr, s[3] >>: 
+           e \in s[2] } : s \in set }
+ 
+ nLowest(card, set) ==
+   LET x == IF \/ Cardinality(set) > card
+            THEN CHOOSE x \in SUBSET set \ {{}}: 
+                   /\ Cardinality(x) = card
+                   /\ \A s \in x: \E y \in set \ x: y[2] > s[2]
+            ELSE set
+    IN x
+ 
+ smallestMatch(src, targets) ==
+   LET msg == src[1][1]
+       card == src[1][2]
+       srcState == src[2]
+       srcAgent == src[3]
+       tarAgent == src[4]
+       ts == { IF /\ t[1] = msg  
+                  /\ ((t[2] > srcState) \/ (t[2] = srcState))
+                  /\ (t[3] = tarAgent \/ t[3] \in src[1][3])
+               THEN { t }
+               ELSE {} : t \in targets }
+       x == UNION ts
+       y == nLowest(card, x)
+    IN y
+ 
+ msgPairs(sSet,rSet) ==
+   UNION { mkMsgRec(s, smallestMatch(s, rSet)) : s \in sSet }
+ 
+ mkMsgRec(s,rSet) ==
+  LET msg ==
+        s[1][1] 
+      mkMsg(s,r) ==
+        [label |-> msg,
+         tiplabel |-> msg.type,
+         font |-> fontsize,
+         tipfont |-> fontsize,
+         color |-> CASE msg.type = "rd" -> "blue" [] 
+                        msg.type = "rdRes" -> "green" [] 
+                        OTHER -> "black",
+         style |-> CASE OTHER -> "solid",
+         from |-> [agent |-> s[3],state |-> s[2]],
+         to |-> [agent |-> r[3],state |-> r[2]]]
+   IN {mkMsg(s,r): r \in rSet}
+
+ extract_msgs[states \in {}] == \* FIXME enforce format, or use don't care
+   LET pairs(n) == { [curr |-> i, next |-> i+1] : i \in 1 .. n-1 }
+       ps == pairs(Cardinality(DOMAIN states))
+       s == nonEmpty(UNION { sent(states, pair) : pair \in ps })
+       r == nonEmpty(UNION { recv(states, pair) : pair \in ps })
+       mps == msgPairs(flattenS(s), flattenR(r))
+    IN mps
+ 
+ sf[transition \in {}] ==
+   [label    |-> transition.diff,
+    hidediff |-> {}, \* {"g_pc_clientSeq", "g_view_Server", "g_inbox"},
+    font     |-> fontsize]
+ 
+ ASSUME [ messages |-> extract_msgs, state_transitions |-> sf]
+ ====
