@@ -1,16 +1,16 @@
 {------------------------------------------------------------------------------
 ISSUES
-  - ISSUE: a[1].b.c.d not supported (a[1].b.c is), i.e. only 2 dots are 
-    supported following a funcation application (or record reference).
+  - ISSUE: a[1].b.c.d not supported (a[1].b.c is), i.e. only 2 dots are
+    supported following a function application (or record reference).
     WORKAROUND 1: LET x = a[1].b.c IN x.d
     WORKAROUND 2: (a[1].b.c).d
 
-  - ISSUE: f[g[h]] not supported, g is unexpected. 
+  - ISSUE: f[g[h]] not supported, g is unexpected.
     WORKAROUND: f[ (g[h]) ], add parenthesis around inner g[h]
 ------------------------------------------------------------------------------}
 
 module Language.TLAPlus.Parser
-    (tlaspec, cfgspec, table, mkState, 
+    (tlaspec, cfgspec, table, mkState,
      expression, operatorDef) -- for use in australis
 where
 
@@ -24,7 +24,7 @@ import qualified Text.ParserCombinators.Parsec.Token as P
 import Data.List (nub, (\\))
 import Data.Set as Set (fromList)
 
-import Language.TLAPlus.ParserState 
+import Language.TLAPlus.ParserState
     (TLAParser, PState, mkState, pushIndent, popIndent)
 import Language.TLAPlus.Syntax
 import Language.TLAPlus.Pretty (prettyPrintE)
@@ -60,7 +60,7 @@ headerSpec = do{ dashSep
            }
 
 extends :: TLAParser AS_ExtendDecl
-extends = do{ p <- getPosition 
+extends = do{ p <- getPosition
             ; option (AS_ExtendDecl p []) $
               do{
                 ; reserved "EXTENDS"
@@ -98,13 +98,13 @@ unit = do{ l <- sepBy (choice [ -- try as cheap way to left factor identifier
          ; return l
          }
 
-mkIdent :: SourcePos -> [String] -> String -> AS_Expression 
+mkIdent :: SourcePos -> [String] -> String -> AS_Expression
 mkIdent p qual name = AS_Ident (mkInfo p) qual name
 
 mkInfo :: SourcePos -> AS_InfoE
 mkInfo p = (p, Nothing, Nothing)
 
-qualident :: TLAParser AS_Expression 
+qualident :: TLAParser AS_Expression
 qualident = do{ p <- getPosition
 --              ; l <- sepBy1 identifier (char '!') -- for TLA+
 -- FIXME, for australis/short: meaning of ! is incompatible with TLA+, ifdef?
@@ -117,14 +117,14 @@ qualident = do{ p <- getPosition
 operatorHead :: TLAParser AS_OperatorHead
 operatorHead = do{ qname <- qualident
                  ; args <- option [] (parens $ commaSep operatorHeadEntry)
-                 ; return $ AS_OpHead qname args 
+                 ; return $ AS_OpHead qname args
                  }
 
 operatorHeadEntry :: TLAParser AS_Expression
 operatorHeadEntry = do{ p <- getPosition
                       ; qname <- qualident
                       ; l <- option [] (parens $ commaSep expression)
-                      ; if l == [] 
+                      ; if l == []
                         then return qname
                         else return $ AS_OpApp (mkInfo p) qname l
                       }
@@ -140,10 +140,10 @@ operatorDef = do{ p <- getPosition
 funDef :: TLAParser AS_UnitDef
 funDef = do{ p <- getPosition
            ; qname <- qualident
-           ; args <- squares $ commaSep quantifierBound  
+           ; args <- squares $ commaSep quantifierBound
            ; reservedOp "=="
            ; expr <- expression
-           ; return $ AS_FunctionDef p qname args expr  
+           ; return $ AS_FunctionDef p qname args expr
            }
 
 assume :: TLAParser AS_UnitDef
@@ -164,14 +164,14 @@ quantifierBound :: TLAParser AS_QBoundN
 quantifierBound = do{ ids <- commaSep qualident            -- FIXME, see p. 280
                     ; reservedOp "\\in"
                     ; expr <- expression
-                    ; return $ AS_QBoundN ids expr 
+                    ; return $ AS_QBoundN ids expr
                     }
 
 quantifierBound1 :: TLAParser AS_QBound1
 quantifierBound1 = do{ id <- qualident
                      ; reservedOp "\\in"
                      ; expr <- expression
-                     ; return $ AS_QBound1 id expr 
+                     ; return $ AS_QBound1 id expr
                      }
 
 expression :: TLAParser AS_Expression
@@ -182,28 +182,28 @@ expressionNoAngularClose = buildExpressionParser table
                              basicExprNoAngularClose <?> "expression"
 
 op_prefix :: AS_PrefixOp -> AS_InfoE -> AS_Expression -> AS_Expression
-op_prefix op info e = 
+op_prefix op info e =
     let res = AS_PrefixOP info op e
-     in --Trace.trace ("=Pre=> "++prettyPrintE res) 
+     in --Trace.trace ("=Pre=> "++prettyPrintE res)
           res
 
 op_postfix :: AS_PostfixOp -> AS_InfoE -> AS_Expression -> AS_Expression
-op_postfix op info e = 
+op_postfix op info e =
     let res = AS_PostfixOP info op e
-     in --Trace.trace ("=Post=> "++prettyPrintE res) 
+     in --Trace.trace ("=Post=> "++prettyPrintE res)
           res
 
 op_postfixIgnore :: AS_InfoE -> AS_Expression -> AS_Expression
 op_postfixIgnore _info e =
     let res = e
-     in --Trace.trace ("=PostIgnore=> "++prettyPrintE res) 
+     in --Trace.trace ("=PostIgnore=> "++prettyPrintE res)
           res
 
-op_infix :: AS_InfixOp -> AS_InfoE 
+op_infix :: AS_InfixOp -> AS_InfoE
          -> AS_Expression  -> AS_Expression -> AS_Expression
-op_infix op info a b = 
+op_infix op info a b =
     let res = AS_InfixOP info op a b
-     in --Trace.trace ("=Infix=> "++prettyPrintE res) 
+     in --Trace.trace ("=Infix=> "++prettyPrintE res)
           res
 
 op_infixS :: AS_InfixOp -> (AS_InfoE, AS_Expression)
@@ -211,12 +211,12 @@ op_infixS :: AS_InfixOp -> (AS_InfoE, AS_Expression)
 -- FIXME MAKE THIS MORE GENERIC SO THAT IT WORKS FOR MORE THAN 2 DOTS
 -- SHOULD BE A SIMPLE WALKER. SEE AST PICTURES BELOW.
 op_infixS op (info, fal) a b =
-    case b of 
-      {- CASE a[1] (0 dots) 
+    case b of
+      {- CASE a[1] (0 dots)
       -}
       AS_CloseFunApp -> -- for a[1]
         let res = AS_InfixOP info op a fal -- drop b and use arg list
-         in --Trace.trace ("=InfixS1=> "++prettyPrintE res) 
+         in --Trace.trace ("=InfixS1=> "++prettyPrintE res)
               res
 
       {- CASE a[1].b (1 dot)
@@ -225,7 +225,7 @@ op_infixS op (info, fal) a b =
 
               ** ORIGINAL AST **    -->    ** REWRITTEN AST **
 
-                (FunApp info)                           
+                (FunApp info)
                       /\
                      a  (DOT info') <== b          (DOT info') <== res
                          /\                           /\
@@ -235,8 +235,8 @@ op_infixS op (info, fal) a b =
       -}
       AS_InfixOP info' AS_DOT AS_CloseFunApp b' -> -- for a[1].b
         let lhs = AS_InfixOP info op a fal -- drop b and use arg list
-            res = AS_InfixOP info' AS_DOT lhs b'  -- replace AS_CloseFunApp 
-         in --Trace.trace ("=InfixS2=> "++prettyPrintE res) 
+            res = AS_InfixOP info' AS_DOT lhs b'  -- replace AS_CloseFunApp
+         in --Trace.trace ("=InfixS2=> "++prettyPrintE res)
               res
 
       {- CASE a[1].b.c (2 dots)
@@ -259,7 +259,7 @@ op_infixS op (info, fal) a b =
         let lhs = AS_InfixOP info op a fal -- drop b and use arg list
             middle = AS_InfixOP i' AS_DOT lhs b'
             res = AS_InfixOP i'' AS_DOT middle b''
-         in --Trace.trace ("=InfixS3=> "++prettyPrintE res) 
+         in --Trace.trace ("=InfixS3=> "++prettyPrintE res)
               res
 
       _ ->
@@ -267,7 +267,7 @@ op_infixS op (info, fal) a b =
           in Trace.trace ("InfixS ERRROR (too many dots after [..], "++
                           "only 2 supported), UNEXPECTED a="++prettyPrintE a++
                           ", fal="++show (map prettyPrintE l)++
-                          ", b="++prettyPrintE b) $ 
+                          ", b="++prettyPrintE b) $
                          AS_Bool info False -- some value to typecheck ok
 
 table :: OperatorTable Char PState AS_Expression
@@ -306,7 +306,7 @@ table =
               ,binary "#"          (op_infix  AS_NEQ)      AssocNone
               ,binary "/="         (op_infix  AS_NEQ)      AssocNone
               ,binary "\\in"       (op_infix  AS_In)       AssocNone
-              ,binary "\\notin"    (op_infix  AS_NotIn)    AssocNone] 
+              ,binary "\\notin"    (op_infix  AS_NotIn)    AssocNone]
     ,{- 4/ 4-}[prefix "~"          (op_prefix AS_Not)
               ,prefix "UNCHANGED"  (op_prefix AS_UNCHANGED)
               ,prefix "[]"         (op_prefix AS_ALWAYS)
@@ -327,23 +327,23 @@ binaryS name fun assoc = Infix (do{ p <- getPosition
                                   ; let fal = AS_FunArgList (mkInfo p) l
                                   ; return $ fun (mkInfo p, fal) }) assoc
 prefix  name fun       = Prefix (do{ p <- getPosition
-                                   ; reservedOp name 
+                                   ; reservedOp name
                                    ; return $ fun (mkInfo p) })
 postfix name fun       = Postfix (do{ p <- getPosition
                                     ; reservedOp name
                                     ; return $ fun (mkInfo p) })
-                    
+
 basicExpr :: TLAParser AS_Expression
-basicExpr = choice $ basicExprListNoAngularClose ++ 
+basicExpr = choice $ basicExprListNoAngularClose ++
             [ do{ char ']'
                 ; whiteSpace
                 ; return AS_CloseFunApp
                 } ]
-            
+
 basicExprNoAngularClose :: TLAParser AS_Expression
 basicExprNoAngularClose = choice basicExprListNoAngularClose
 
-basicExprListNoAngularClose = 
+basicExprListNoAngularClose =
     [ parens expression
     , letExpr
     , try squareExpr
@@ -366,7 +366,7 @@ basicExprListNoAngularClose =
     , qualident
     , do{ char '@'
         ; whiteSpace
-        ; return AS_OldVal 
+        ; return AS_OldVal
         }
     ]
 
@@ -386,7 +386,7 @@ caseArm = do{ p <- getPosition
             ; a <- expression
             ; reservedOp "->"
             ; b <- expression
-            ; return $ case a of 
+            ; return $ case a of
                 (AS_Ident _info [] "OTHER") -> AS_OtherCaseArm (mkInfo p) b
                 _                           -> AS_CaseArm (mkInfo p) a b
             }
@@ -396,8 +396,8 @@ caseExpr = do{ p <- getPosition
              ; reserved "CASE"
              ; arms <- sepBy1 (try caseArm) (reserved "[]")
              ; let (arms', otherarm) = case last arms of
-                     (AS_OtherCaseArm _ _e) -> 
-                        (arms \\ [last arms], -- rem last 
+                     (AS_OtherCaseArm _ _e) ->
+                        (arms \\ [last arms], -- rem last
                          Just $ last arms)
                      (AS_CaseArm _ _a _b) -> (arms, Nothing)
                 in return $ AS_Case (mkInfo p) arms' otherarm
@@ -414,7 +414,7 @@ chooseExpr = do{ p <- getPosition
 
 quantifiedExpr :: TLAParser AS_Expression
 quantifiedExpr = do{ p <- getPosition
-                   ; t <-     do{ reserved "\\A"; return AS_All } 
+                   ; t <-     do{ reserved "\\A"; return AS_All }
                           <|> do{ reserved "\\E"; return AS_Exist }
                    ; b <- commaSep1 quantifierBound
                    ; reservedOp ":"
@@ -443,7 +443,7 @@ squareExprStutter = do{ e <- squares expression
                       ; char '_'
                       ; st <-    do{ p <- getPosition
                                    ; i <- identifier
-                                   ; return $ mkIdent p [] i } 
+                                   ; return $ mkIdent p [] i }
                              <|> gtgtExpr -- tuple
                       ; return $ AS_Stutter e st
                       }
@@ -453,7 +453,7 @@ quantifierBoundFunction = do{ p <- getPosition
                             ; b <- commaSep quantifierBound
                             ; reservedOp "|->"
                             ; e <- expression
-                            ; return $ 
+                            ; return $
                                 AS_QuantifierBoundFunction (mkInfo p) b e
                             }
 
@@ -495,7 +495,7 @@ recordExcept = do{ e <-     expression
 
 functionType :: TLAParser AS_Expression -- [S -> T]
 functionType = do{ p <- getPosition
-                 ; a <- expression 
+                 ; a <- expression
                  ; reservedOp "->"
                  ; b <- expression
                  ; return $ AS_FunctionType (mkInfo p) a b
@@ -507,13 +507,13 @@ recordType = do{ p <- getPosition
                                    ; i <- identifier
                                    ; reservedOp ":"
                                    ; e <- expression
-                                   ; return $ AS_RecordElementType (mkInfo p) 
+                                   ; return $ AS_RecordElementType (mkInfo p)
                                                 (AS_Field i) e
                                    }
                ; return $ AS_RecordType (mkInfo p) l
                }
 
-{-- FIXME DELETE 
+{-- FIXME DELETE
 funArgList :: TLAParser [AS_Expression] -- [a,b][c] is two FunArgLists
 funArgList = do{ p <- getPosition
              ; l <- many1 $ try $ squares $ commaSep expression
@@ -564,9 +564,9 @@ letExpr = do{ p <- getPosition
             ; return $ AS_Let (mkInfo p) l e
             }
 
-sepBy1At :: Int -> GenParser tok st a -> GenParser tok st sep 
+sepBy1At :: Int -> GenParser tok st a -> GenParser tok st sep
          -> GenParser tok st [a]
-sepBy1At indent p sep = 
+sepBy1At indent p sep =
     do{ x <- p
       ; xs <- many $ do{ pos <- getPosition
                        ; if sourceColumn pos < indent
@@ -579,28 +579,28 @@ sepBy1At indent p sep =
 landExpr :: TLAParser AS_Expression
 landExpr = do{ p <- getPosition
              ; reservedOp "/\\"
-             ; updateState $ -- update state, so p is visible in expr 
+             ; updateState $ -- update state, so p is visible in expr
                  \s -> pushIndent s $ sourceColumn p
              ; le <- sepBy1At (sourceColumn p)
                        (do{ e <- try expression
                           ; return e
                           })
                        (reserved "/\\")
-             ; updateState $ \s -> let (_, s') = popIndent s in s' 
+             ; updateState $ \s -> let (_, s') = popIndent s in s'
              ; return $ AS_LAND (mkInfo p) le
              }
 
 lorExpr :: TLAParser AS_Expression
 lorExpr = do{ p <- getPosition
              ; reservedOp "\\/"
-             ; updateState $ -- update state, so p is visible in expr 
+             ; updateState $ -- update state, so p is visible in expr
                  \s -> pushIndent s $ sourceColumn p
              ; le <- sepBy1At (sourceColumn p)
                        (do{ e <- try expression
                           ; return e
                           })
                        (reserved "\\/")
-             ; updateState $ \s -> let (_, s') = popIndent s in s' 
+             ; updateState $ \s -> let (_, s') = popIndent s in s'
              ; return $ AS_LOR (mkInfo p) le
              }
 
@@ -608,7 +608,7 @@ boolean :: TLAParser AS_Expression
 boolean =     do{ p <- getPosition
                 ; reserved "TRUE"
                 ; return $ AS_Bool (mkInfo p) True
-                } 
+                }
           <|> do{ p <- getPosition
                 ; reserved "FALSE"
                 ; return $ AS_Bool (mkInfo p) False
@@ -686,7 +686,7 @@ cfgconstant :: TLAParser CFG_ConstantEntry
 cfgconstant = do{ p <- getPosition
                 ; i <- cfgident
                 ; e <-     do { reservedOp "="
-                              ; v <- cfgvalue                                
+                              ; v <- cfgvalue
                               ; return $ CFG_Assignment (mkCfgInfo p) i v
                               }
                        <|> do { reservedOp "<-"
@@ -725,7 +725,7 @@ cfgboolean :: TLAParser CFG_Value
 cfgboolean =     do{ p <- getPosition
                    ; reserved "TRUE"
                    ; return $ CFG_Bool (mkCfgInfo p) True
-                   } 
+                   }
              <|> do{ p <- getPosition
                    ; reserved "FALSE"
                    ; return $ CFG_Bool (mkCfgInfo p) False
@@ -738,7 +738,7 @@ lexer = lexer0{P.reservedOp = rOp}
             resOp1 name = do string name -- \in
                              notFollowedBy letter <?> ("end of " ++ show name)
             resOp2 name = do string name -- \ (set difference)
-                             notFollowedBy (letter <|> char '/') <?> 
+                             notFollowedBy (letter <|> char '/') <?>
                                                ("end of " ++ show name)
             resOp3 name = do string name -- \/ (or)
                              return ()
@@ -749,30 +749,30 @@ lexer = lexer0{P.reservedOp = rOp}
                              return ()
             ------
             resOp6 name = do string name -- ==
-                             notFollowedBy (char '=' {-??-} <|> char '>') <?> 
+                             notFollowedBy (char '=' {-??-} <|> char '>') <?>
                                                ("end of " ++ show name)
             resOp7 name = do string name -- =>
                              return ()
             resOp8 name = do string name -- =
-                             notFollowedBy (char '=' <|> char '>') <?> 
+                             notFollowedBy (char '=' <|> char '>') <?>
                                                ("end of " ++ show name)
             ------
             resOpLT0 name = do string name -- <>
-                               notFollowedBy (char '>' {-??-} <|> char '=') <?> 
+                               notFollowedBy (char '>' {-??-} <|> char '=') <?>
                                                  ("end of " ++ show name)
             resOpLT1 name = do string name -- <=
                                return ()
             resOpLT2 name = do string name -- <
-                               notFollowedBy (char '=' <|> char '>') <?> 
+                               notFollowedBy (char '=' <|> char '>') <?>
                                                  ("end of " ++ show name)
             ------
             resOpAngular name = do string name -- []
-                                   notFollowedBy (char ']') <?> 
+                                   notFollowedBy (char ']') <?>
                                                 ("end of " ++ show name)
             ------
             rOp name = lexeme $ try $
                           case name of
-                            ('\\':cs@(_:_)) 
+                            ('\\':cs@(_:_))
                                 | cs == "/"      -> resOp3 name -- \/
                                 | all isAlpha cs -> resOp1 name -- \in, etc.
                             "\\" -> resOp2 name                 -- \ (set -)
@@ -791,7 +791,7 @@ lexer = lexer0{P.reservedOp = rOp}
                             "[]" -> resOpAngular name
                             ------
                             -- pre/postfix operator, special handling to cover
-                            -- cases where operator is immediately followed by 
+                            -- cases where operator is immediately followed by
                             -- infix (e.g. cs'.x), or expression
                             -- (e.g. UNCHANGED<<cs>>)
                             "'" -> resOp1 name
@@ -812,10 +812,10 @@ tladef = emptyDef {
 -- TLC EXTENSION, allow @ in identifiers for 'short' pc guards (when a@b ...)
 , P.identLetter     = alphaNum <|> char '_' <|> char '@'
 --, P.identLetter     = alphaNum <|> char '_'
-, P.opStart         = oneOf $ nub $ 
+, P.opStart         = oneOf $ nub $
                         map (\s -> head s) $ P.reservedOpNames tladef
 , P.opLetter        = oneOf symbs
-, P.reservedOpNames = [ -- prefix operators 
+, P.reservedOpNames = [ -- prefix operators
                         "SUBSET"
                       , "DOMAIN"
                       , "UNION"
@@ -843,7 +843,7 @@ tladef = emptyDef {
                       , "\\in"
                       , "\\leq"
                       , "\\notin"
-                      , "\\times" 
+                      , "\\times"
                       , "\\o", "\\circ"
                       , "\\subseteq", "\\cup", "\\cap"
                       , "\\X", "\\div"
@@ -870,21 +870,21 @@ tladef = emptyDef {
   where
     symbs = filter (not . isAlpha) . concat $ P.reservedOpNames tladef
 
-dot             = P.dot lexer    
-parens          = P.parens lexer    
-braces          = P.braces lexer    
-squares         = P.squares lexer    
-semiSep         = P.semiSep lexer  
-semiSep1        = P.semiSep1 lexer    
+dot             = P.dot lexer
+parens          = P.parens lexer
+braces          = P.braces lexer
+squares         = P.squares lexer
+semiSep         = P.semiSep lexer
+semiSep1        = P.semiSep1 lexer
 commaSep        = P.commaSep lexer
 commaSep1       = P.commaSep1 lexer
 brackets        = P.brackets lexer
-whiteSpace      = P.whiteSpace lexer    
-symbol          = P.symbol lexer    
-identifier      = P.identifier lexer    
-reserved        = P.reserved lexer    
+whiteSpace      = P.whiteSpace lexer
+symbol          = P.symbol lexer
+identifier      = P.identifier lexer
+reserved        = P.reserved lexer
 reservedOp      = P.reservedOp lexer
-integer         = P.integer lexer    
-natural         = P.natural lexer    
-charLiteral     = P.charLiteral lexer    
+integer         = P.integer lexer
+natural         = P.natural lexer
+charLiteral     = P.charLiteral lexer
 stringLiteral   = P.stringLiteral lexer

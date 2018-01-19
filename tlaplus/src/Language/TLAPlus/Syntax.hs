@@ -11,18 +11,18 @@ type AS_InfoU = PPos.SourcePos
 
 data AS_Spec = AS_Spec {name :: String,
                         extendDecl   :: AS_ExtendDecl,
-                        unitDef      :: [AS_UnitDef]} 
+                        unitDef      :: [AS_UnitDef]}
                deriving (Eq, Ord, Show, Data, Typeable)
-data AS_ExtendDecl = AS_ExtendDecl PPos.SourcePos [String] 
+data AS_ExtendDecl = AS_ExtendDecl PPos.SourcePos [String]
                      deriving (Eq, Ord, Show, Data, Typeable)
 
-data AS_QBoundN = AS_QBoundN [AS_Expression] AS_Expression 
+data AS_QBoundN = AS_QBoundN [AS_Expression] AS_Expression
                   deriving (Eq, Ord, Show, Data, Typeable)
-data AS_QBound1 = AS_QBound1 AS_Expression AS_Expression 
+data AS_QBound1 = AS_QBound1 AS_Expression AS_Expression
                   deriving (Eq, Ord, Show, Data, Typeable)
-data AS_UnitDef = 
-    AS_FunctionDef AS_InfoU AS_Expression [AS_QBoundN] AS_Expression 
-  | AS_OperatorDef AS_InfoU AS_OperatorHead AS_Expression 
+data AS_UnitDef =
+    AS_FunctionDef AS_InfoU AS_Expression [AS_QBoundN] AS_Expression
+  | AS_OperatorDef AS_InfoU AS_OperatorHead AS_Expression
   | AS_Assume AS_InfoU AS_Expression
   | AS_Theorem AS_InfoU AS_Expression
   | AS_ConstantDecl AS_InfoU [AS_Expression]
@@ -30,10 +30,10 @@ data AS_UnitDef =
   | AS_Separator AS_InfoU
     deriving (Eq, Ord, Show, Data, Typeable)
 
-data AS_OperatorHead = AS_OpHead AS_Expression [AS_Expression] 
+data AS_OperatorHead = AS_OpHead AS_Expression [AS_Expression]
                        deriving (Eq, Ord, Show, Data, Typeable)
 
-data AS_Expression = 
+data AS_Expression =
         AS_Ident AS_InfoE [String] String -- possibly prefixed X!Y!a
       | AS_FunArgList AS_InfoE [AS_Expression]
       | AS_OpApp AS_InfoE AS_Expression [AS_Expression]
@@ -47,7 +47,7 @@ data AS_Expression =
       | AS_RecordFunction AS_InfoE [AS_MapTo]
       | AS_QuantifierBoundFunction AS_InfoE [AS_QBoundN] AS_Expression
       | AS_Choose AS_InfoE AS_QBound1 AS_Expression
-      | AS_Quantified AS_InfoE AS_QuantifierKind [AS_QBoundN] AS_Expression 
+      | AS_Quantified AS_InfoE AS_QuantifierKind [AS_QBoundN] AS_Expression
       | AS_Tuple AS_InfoE [AS_Expression]
       | AS_LAND AS_InfoE [AS_Expression]
       | AS_LOR AS_InfoE [AS_Expression]
@@ -62,14 +62,14 @@ data AS_Expression =
       | AS_Case AS_InfoE [AS_CaseArm] (Maybe AS_CaseArm)
       | AS_Stutter AS_Expression AS_Expression
         -- For codegen only (no parser support yet).
-      | AS_Fair Bool AS_Expression AS_Expression  
+      | AS_Fair Bool AS_Expression AS_Expression
         -- A BIF is bound into the environment by making it the VA_OperatorDef
         -- expression. BIFs are not created by the parser, but instead they are
         -- bound in the env structure before evaluation starts.
         -- BIFs implictly know what argument names they look for.
       | AS_BIF String String
         -- in Parser.op_infixS we replace AS_CloseFunApp with the correct
-        -- expression tree. AS_CloseFunApp thus never appears in a correct AST 
+        -- expression tree. AS_CloseFunApp thus never appears in a correct AST
       | AS_CloseFunApp -- the ] in a f[a,b] construct
         deriving (Eq, Ord, Show, Data, Typeable)
 
@@ -81,36 +81,36 @@ data AS_ExceptNav = AS_ExceptNavField AS_Field                            -- .x
 data AS_ExceptAssignment = AS_ExceptAssignment [AS_ExceptNav] AS_Expression
                            deriving (Eq, Ord, Show, Data, Typeable)
 
-data AS_CaseArm = AS_CaseArm AS_InfoE AS_Expression AS_Expression 
-                | AS_OtherCaseArm AS_InfoE AS_Expression 
+data AS_CaseArm = AS_CaseArm AS_InfoE AS_Expression AS_Expression
+                | AS_OtherCaseArm AS_InfoE AS_Expression
                   deriving (Eq, Ord, Show, Data, Typeable)
 
-data AS_RecordElementType = AS_RecordElementType AS_InfoE 
-                              AS_Field AS_Expression 
+data AS_RecordElementType = AS_RecordElementType AS_InfoE
+                              AS_Field AS_Expression
                             deriving (Eq, Ord, Show, Data, Typeable)
 
-data AS_QuantifierKind = AS_All | AS_Exist 
+data AS_QuantifierKind = AS_All | AS_Exist
                          deriving (Eq, Ord, Show, Data, Typeable)
 
-data AS_MapTo = AS_MapTo AS_Field AS_Expression 
+data AS_MapTo = AS_MapTo AS_Field AS_Expression
                 deriving (Eq, Ord, Show, Data, Typeable)
 
 data AS_PrefixOp = AS_SUBSET
-                 | AS_INSTANCE 
-                 | AS_UNION 
-                 | AS_DOMAIN 
-                 | AS_UNCHANGED 
-                 | AS_Not 
-                 | AS_ALWAYS 
-                 | AS_Eventually 
+                 | AS_INSTANCE
+                 | AS_UNION
+                 | AS_DOMAIN
+                 | AS_UNCHANGED
+                 | AS_Not
+                 | AS_ALWAYS
+                 | AS_Eventually
                    deriving (Eq, Ord, Show, Data, Typeable)
-data AS_PostfixOp = AS_Prime 
+data AS_PostfixOp = AS_Prime
                     deriving (Eq, Ord, Show, Data, Typeable)
-data AS_InfixOp = AS_EQ 
-                | AS_NEQ 
-                | AS_COLONGT 
-                | AS_ATAT 
-                | AS_DOTDOT 
+data AS_InfixOp = AS_EQ
+                | AS_NEQ
+                | AS_COLONGT
+                | AS_ATAT
+                | AS_DOTDOT
                 | AS_DOT
                 | AS_GT
                 | AS_LT
@@ -129,8 +129,8 @@ data AS_InfixOp = AS_EQ
                 | AS_Mult
                 | AS_Minus
                 | AS_Times
-                | AS_AND 
-                | AS_OR 
+                | AS_AND
+                | AS_OR
                 | AS_Implication
                 | AS_TildeGT
                 | AS_FunApp -- f.g[a,b] => f.g `funapp` arrayref [a,b]
@@ -140,7 +140,7 @@ data AS_InfixOp = AS_EQ
 parentE :: AS_Expression -> Maybe AS_Expression
 parentE e = let (_pos, _u, mpe) = infoE e in mpe
 
--- don't call this unless the AST was rewritten to establish the 
+-- don't call this unless the AST was rewritten to establish the
 -- backwards links
 parentU :: AS_Expression -> AS_UnitDef
 parentU e = let (_pos, Just u, _mpe) = infoE e in u
@@ -192,14 +192,14 @@ infoE (AS_Case info _ _) = info
       | AS_BIF AS_InfoE String String
       | AS_CloseFunApp
 -}
-{- for debugging - this ensures that we can pring NoRule errors in Eval -}
+{- for debugging - this ensures that we can print NoRule errors in Eval -}
 infoE _ = mkDummyInfo "ERROR-Syntax.infoE-UPDATE-NEEDED"
 
 mkDummyInfo s  = (PPos.newPos s 0 0, Nothing, Nothing)
 
 infoU :: AS_UnitDef -> AS_InfoU
 infoU (AS_FunctionDef info _ _ _) = info
-infoU (AS_OperatorDef info _ _) = info 
+infoU (AS_OperatorDef info _ _) = info
 infoU (AS_Assume info _) = info
 infoU (AS_Theorem info _) = info
 infoU (AS_ConstantDecl info _) = info
@@ -208,7 +208,7 @@ infoU (AS_Separator info) = info
 
 -------------------------------------------------------------------------------
 
-data CFG_Config = CFG_Config (Maybe String) [CFG_Statement] 
+data CFG_Config = CFG_Config (Maybe String) [CFG_Statement]
                   deriving (Eq, Ord, Show, Data, Typeable)
 
 data CFG_Statement = CFG_ConstantDef CFG_Info [CFG_ConstantEntry]
@@ -222,10 +222,10 @@ data CFG_Value = CFG_Atom CFG_Info String    -- translates to VA_Atom
                | CFG_Bool CFG_Info Bool                    -- VA_Bool
                | CFG_Int CFG_Info Int                      -- VA_Int
                | CFG_StringLiteral CFG_Info String         -- VA_String
-               | CFG_Set CFG_Info (Set CFG_Value)          -- VA_Set 
+               | CFG_Set CFG_Info (Set CFG_Value)          -- VA_Set
                  deriving (Eq, Ord, Show, Data, Typeable)
 
-data CFG_Ident = CFG_Ident CFG_Info String 
+data CFG_Ident = CFG_Ident CFG_Info String
                  deriving (Eq, Ord, Show, Data, Typeable)
 
 data CFG_ConstantEntry = CFG_Assignment CFG_Info CFG_Ident CFG_Value
@@ -258,9 +258,9 @@ data VA_Value = VA_Map (Map VA_Value VA_Value)       -- map
               | VA_String String                     -- string
               | VA_Char Char                         -- char, from string[2]
               | VA_Atom String                       -- atom, from cfg file
-              | VA_FunctionDef AS_InfoE              -- fun[x] == 
-                  AS_Expression [AS_QBoundN] 
-                  AS_Expression 
+              | VA_FunctionDef AS_InfoE              -- fun[x] ==
+                  AS_Expression [AS_QBoundN]
+                  AS_Expression
               | VA_OperatorDef AS_InfoE              -- op(x) ==
                   AS_OperatorHead AS_Expression
               | VA_FunType VA_Value VA_Value
@@ -272,12 +272,12 @@ data VA_Value = VA_Map (Map VA_Value VA_Value)       -- map
 
 data TY_Type = TY_Map | TY_Rec | TY_Set | TY_Seq |
                TY_Int | TY_Bool | TY_String | TY_Char | TY_Atom |
-               TY_Fun | TY_Op | 
+               TY_Fun | TY_Op |
                TY_RecType | TY_FunType | TY_SeqType |
-               TY_Var | 
+               TY_Var |
                TY_FunArgList
                deriving (Eq, Ord, Show, Data, Typeable)
-                       
+
 typeOf :: VA_Value -> TY_Type
 typeOf (VA_Map _) = TY_Map
 typeOf (VA_Rec _) = TY_Rec

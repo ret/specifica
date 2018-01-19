@@ -1,13 +1,13 @@
 -- An example demonstrating how to connect a Happy parser to an Alex lexer.
-{ 
-module Parser (Stmt(..), Ident(..), Expr(..), 
+{
+module Parser (Stmt(..), Ident(..), Expr(..),
 	       parser, listparser, statesectionparser, exprparser) where
 
 -- avoid Map.! and Data.Array.! clash (happy, templates/GenericTemplate)
 -- by hiding Map.!. Patch to happy sent to Simon Marlow for happy to qualify
 -- use of ! for array access.
-import Data.Map as Map hiding ((!))
-import Data.Set as Set
+import Data.Map as Map hiding ((!), map)
+import Data.Set as Set hiding (map)
 import Lexer
 }
 
@@ -93,7 +93,7 @@ data Expr = RecE (Map Ident Expr) |
             IntE Int |
             StrE String |
             AtomE String deriving (Eq,Ord,Show)
-  
+
 happyError :: [Token] -> a
 happyError tks = error ("Parse error at " ++ lcn ++ "\n")
 	where

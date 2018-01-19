@@ -9,14 +9,34 @@ maintainer:          kramer@acm.org
 stability:           experimental
 synopsis:            Short translator to TLA+
 category:            Language
-description:         
+description:
 
 build-type:          Simple
 cabal-version:       >= 1.2
 
 executable           short
   main-is:           short.hs
-  build-depends:     base, containers, dataenc, Crypto, parsec >= 3.0.1, 
+  other-modules:     Flatten,
+                     GenCFG,
+                     GenSLA,
+                     Merge,
+                     Parser,
+                     ParserHelper,
+                     Rewrite,
+                     RewriteCont,
+                     RewriteDoMeanwhile,
+                     RewriteExtendHook,
+                     RewriteLifecycle,
+                     RewriteMsgSetHandler,
+                     RewriteONCE,
+                     RewriteOverrideTLA,
+                     RewriteStateInit,
+                     RewriteTimer,
+                     RewriteWhen,
+                     Syntax,
+                     SyntaxPretty,
+                     TLACodeGen
+  build-depends:     base, containers, dataenc, Crypto, parsec >= 3.0.1,
                      regex-compat, wl-pprint, syb, tlaplus
   extensions:        DeriveDataTypeable
                      FlexibleContexts

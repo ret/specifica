@@ -9,7 +9,7 @@ maintainer:          kramer@acm.org
 stability:           experimental
 synopsis:            TLA+ evaluator
 category:            Language
-description:         
+description:
   Simple TLA+ expression evaluator. Does not currently evaluate Actions, but
   can apply operators and functions. Use the "ASSUME <expr>" form to evaluate
   and print expr (e.g. using the tli tool).
@@ -31,6 +31,7 @@ library
 
 executable           tli
   main-is:           tli.hs
+  other-modules:     Language.TLAPlus.Eval
   build-depends:     base, parsec >= 3.0.1
   hs-source-dirs:    src
   extensions:        FlexibleContexts
