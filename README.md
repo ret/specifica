@@ -31,3 +31,5 @@ LET a ==
 [1 |-> {{},{1}},
  42 |-> {{},{42}}]
 ```
+
+The [source for the tle sample](https://github.com/ret/specifica/blob/master/tlaplus-eval/src/tle.hs) is just 32 lines of code. Check it out!
