@@ -35,3 +35,10 @@ executable           tli
   build-depends:     base, parsec >= 3.0.1
   hs-source-dirs:    src
   extensions:        FlexibleContexts
+
+executable           tle
+  main-is:           tle.hs
+  other-modules:     Language.TLAPlus.Eval
+  build-depends:     base, parsec >= 3.0.1
+  hs-source-dirs:    src
+  extensions:        FlexibleContexts
