@@ -36,7 +36,6 @@ LET a ==
  42 |-> {{},{42}}]
 ```
 
-<<<<<<< HEAD
 ### Define and Evaluate a Function
 
 Here's another simple example. This time involving a function:
