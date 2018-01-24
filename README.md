@@ -90,11 +90,11 @@ LET Nat ==
           1..3
 ```
 
-and we can see that the evaluator counted down from 3,2,1, but ultimately the expression `n \in Nat` in the function's domain failed since 0 wasn't in the `Nat` set.
+We can see that the evaluator counted down from 3,2,1, but ultimately the expression `n \in Nat` in the function's domain failed since 0 wasn't in the `Nat` set.
 
 ### Speed Bumps (the evaluator is very naive about powersets)
 
-The following expression calculates the sum of the numbers 1,2, and 3:
+The following expression calculates the sum of the numbers 1,2,3:
 
 ```
 $ echo 'LET Nat == 1..3 sum[ss \in SUBSET Nat] == IF ss = {} THEN 0 ELSE LET p == CHOOSE any \in ss: TRUE IN p + sum[ss \ {p}] IN sum[1..3]' | tle
@@ -117,7 +117,7 @@ LET Nat ==
 6
 ```
 
-Our evaluator is super simple and re-computes the powerset (`SUBSET`) in each recursion to check that `x \in SUBSET Nat` holds. Because the size of the powerset grows `O(2^n)`, picking a larger `Nat` set will slow down `tle` rapidly!
+Our evaluator is super simple and re-computes the powerset (`SUBSET`) in each recursion to check that `ss \in SUBSET Nat` holds. Because the size of the powerset grows `O(2^n)`, picking a larger `Nat` set will slow down `tle` rapidly!
 
 ### More Examples - Cross Products
 
