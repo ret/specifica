@@ -13,6 +13,8 @@ Follow these steps to install and invoke a simple sample application called `tle
 4. `cd specifica`
 5. `stack install`
 
+The [source for the tle sample](https://github.com/ret/specifica/blob/master/tlaplus-eval/src/tle.hs) is just 32 lines of code. Check it out!
+
 ## A Few Examples
 
 These steps will build the `tle` utility and copy it to `~/.local/bin/tle`. Now, we're ready to try out `tle` like so:
@@ -34,6 +36,7 @@ LET a ==
  42 |-> {{},{42}}]
 ```
 
+<<<<<<< HEAD
 ### Define and Evaluate a Function
 
 Here's another simple example. This time involving a function:
