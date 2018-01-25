@@ -7,7 +7,7 @@ Specifica is a collection of TLA+ related Haskell libraries comprising a tlaplus
 Follow these steps to install and invoke a simple sample application called `tle` to evaluate a TLA+ expression from stdin.
 
 1. Install the [Haskell tool stack utility](https://docs.haskellstack.org/en/stable/README/#how-to-install)
-2. add `~/.local/bin/` to your path (this is where `stack` installs binaries
+2. add `~/.local/bin/` to your path (this is where `stack` installs binaries)
 
 3. clone this repo with `git clone https://github.com/ret/specifica`
 4. `cd specifica`
