@@ -117,7 +117,7 @@ LET Nat ==
 6
 ```
 
-Our evaluator is super simple and re-computes the powerset (`SUBSET`) in each recursion to check that `ss \in SUBSET Nat` holds. Because the size of the powerset grows `O(2^n)`, picking a larger `Nat` set will slow down `tle` rapidly!
+Our evaluator is super simple and re-computes the powerset (`SUBSET`) in each recursion to check that `ss \in SUBSET Nat` holds. Because `tle` evaluates eagerly and the size of the powerset grows with `O(2^n)`, picking a larger `Nat` set will slow down `tle` rapidly!
 
 ### More Examples - Cross Products
 
