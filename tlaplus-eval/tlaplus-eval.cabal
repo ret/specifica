@@ -15,12 +15,12 @@ description:
   and print expr (e.g. using the tli tool).
 
 build-type:          Simple
-cabal-version:       >= 1.2
+cabal-version:       >= 1.8
 
 library
   exposed-modules:   Language.TLAPlus.Eval
 
-  build-depends:     base, containers, mtl, tlaplus, wl-pprint, transformers
+  build-depends:     base, containers, mtl, tlaplus, wl-pprint
   hs-source-dirs:    src
   ghc-options:       -Wall
                      -fwarn-tabs
@@ -31,14 +31,12 @@ library
 
 executable           tli
   main-is:           tli.hs
-  other-modules:     Language.TLAPlus.Eval
-  build-depends:     base, parsec >= 3.0.1
-  hs-source-dirs:    src
+  build-depends:     base, parsec >= 3.0.1, tlaplus, tlaplus-eval
+  hs-source-dirs:    app
   extensions:        FlexibleContexts, LambdaCase
 
 executable           tle
   main-is:           tle.hs
-  other-modules:     Language.TLAPlus.Eval
-  build-depends:     base, parsec >= 3.0.1
-  hs-source-dirs:    src
+  build-depends:     base, parsec >= 3.0.1, tlaplus, tlaplus-eval
+  hs-source-dirs:    app
   extensions:        FlexibleContexts, LambdaCase

@@ -11,8 +11,6 @@ import Text.ParserCombinators.Parsec.Language (emptyDef)
 import Language.TLAPlus.Pretty (prettyPrintAS)
 
 import Flatten (SH_FL_Spec(..), insideOut, prettyPrintFlatSH)
-import GenCFG (genCFGFile)
-import GenSLA (genSLAFile)
 import Merge (merge)
 import Parser (mkState, shortspec)
 import Rewrite (rewriteSpecialOperators, rewriteTag)

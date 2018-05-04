@@ -7,7 +7,6 @@ import Data.Generics
 import Data.Typeable as Typeable
 import Syntax
 import Flatten
-import ParserHelper(inlineOperatorDef)
 import TLACodeGen(mk_AS_Type, mkVar, mkView, typeKernel)
 import Debug.Trace(trace)
 

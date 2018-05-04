@@ -1,11 +1,10 @@
-module GenCFG(genCFGFile, crashStartControlConst) where
+module GenCFG(crashStartControlConst) where
 
 import System.Environment (getArgs)
 import System.Exit(exitFailure)
 import Flatten
 import Data.Generics
 import Data.List( (\\) )
-import Syntax
 import RewriteTimer(allRoles)
 import TLACodeGen(typeKernel, subst, Pattern, xify, allSingleMsgHandlerNames)
 import Text.ParserCombinators.Parsec

@@ -5,7 +5,6 @@ import Data.Typeable as Typeable (typeOf)
 import Syntax
 import Flatten
 import Data.List(groupBy, nub)
-import TLACodeGen(mk_AS_Type, combineInfix, mkVar, substSH_Instr)
 import Debug.Trace(trace)
 import RewriteCont(beautifyLAND)
 import Flatten(prettyPrintFlatSH)

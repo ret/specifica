@@ -1,0 +1,42 @@
+name: tlaplus-swimlane
+version:             0.1
+
+license:             BSD3
+license-file:        LICENSE
+
+author:              Reto Kramer <kramer@acm.org>
+maintainer:          kramer@acm.org
+stability:           experimental
+synopsis:            XXX
+category:            Language
+library:
+    exposed-modules:
+      - Parser
+      - Lexer
+      - SLA
+      - ExprHelper
+      - TraceReader
+    dependencies:
+      - base
+      - containers
+      - regex-compat
+      - tlaplus
+      - tlaplus-eval
+      - array
+      - parsec >= 3.0.1
+    source-dirs:    src
+    build-tools:
+      - alex
+      - happy
+    default-extensions:
+      - BangPatterns
+      - LambdaCase
+executables:
+  sl:
+    main:           Sl.hs
+    source-dirs:    app
+    dependencies:
+      - base
+      - containers
+      - tlaplus-swimlane
+      - regex-compat

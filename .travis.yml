@@ -13,7 +13,15 @@ before_install:
 - travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 install:
-  - stack test --no-run-tests --only-dependencies
+  - stack build --only-dependencies --install-ghc
+  # - stack install cabal-install --install-ghc
+  - stack install alex-3.1.7 happy-1.19.5
+  - alex  -V
+  - happy  -V
+  - stack install weeder
 
 script:
-  - stack test
+  - stack build
+  # - curl -sL https://raw.github.com/ndmitchell/hlint/master/misc/travis.sh | sh -s .
+  - curl -sL https://raw.github.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
+  # - stack exec weeder -- .

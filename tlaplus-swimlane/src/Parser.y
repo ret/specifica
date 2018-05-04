@@ -2,7 +2,7 @@
 {
 {-# OPTIONS_GHC -fno-warn-unused-matches #-}
 module Parser (Stmt(..), Ident(..), Expr(..),
-	       parser, listparser, statesectionparser, exprparser) where
+	       parser, listparser, exprparser) where
 
 -- avoid Map.! and Data.Array.! clash (happy, templates/GenericTemplate)
 -- by hiding Map.!. Patch to happy sent to Simon Marlow for happy to qualify

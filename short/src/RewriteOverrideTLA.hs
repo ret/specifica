@@ -4,7 +4,6 @@ import Data.Generics
 import Syntax
 import Flatten
 import Debug.Trace(trace)
-import RewriteLifecycle(appendIL)
 import Text.ParserCombinators.Parsec.Pos as PPos
 import Language.TLAPlus.Syntax as TLASyntax
 

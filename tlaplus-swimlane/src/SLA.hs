@@ -1,4 +1,4 @@
-module SLA where
+module SLA (readSLA) where
 
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr

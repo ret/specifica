@@ -42,15 +42,15 @@ shortform s abbrev =
                    Just o  -> o -- catch all clause
       Just short -> short
 
--- used for printing of message records
-ppRec :: Expr -> Abbrev -> String
-ppRec (RecE map) a = let l = Map.foldrWithKey
-                             (\k e acc -> ((bf $ ppI k a)++"="++(ppE e a)):acc)
-                             [] map
-                       in "["++(join ", " l)++"]"
-ppRec _ _ = error "unspecified"
+-- -- used for printing of message records
+-- ppRec :: Expr -> Abbrev -> String
+-- ppRec (RecE map) a = let l = Map.foldrWithKey
+--                              (\k e acc -> ((bf $ ppI k a)++"="++(ppE e a)):acc)
+--                              [] map
+--                        in "["++(join ", " l)++"]"
+-- ppRec _ _ = error "unspecified"
 
-box s = "\\fbox{"++s++"}"
-bf s = "{\\bf "++s++"}"
-sl s = "{\\em "++s++"}"
+-- box s = "\\fbox{"++s++"}"
+-- bf s = "{\\bf "++s++"}"
+-- sl s = "{\\em "++s++"}"
 color c s = "{\\color{"++c++"}"++s++"}"

@@ -7,7 +7,6 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Debug.Trace as Trace
 import System.IO
-import Lexer (alexScanTokens)
 import Parser (Stmt(..), Ident(..), Expr(..), exprparser)
 import Text.Regex as Regex
 import Debug.Trace(trace)

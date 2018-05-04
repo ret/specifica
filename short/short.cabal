@@ -12,11 +12,10 @@ category:            Language
 description:
 
 build-type:          Simple
-cabal-version:       >= 1.2
+cabal-version:       >= 1.8
 
-executable           short
-  main-is:           short.hs
-  other-modules:     Flatten,
+library
+  exposed-modules:   Flatten,
                      GenCFG,
                      GenSLA,
                      Merge,
@@ -41,3 +40,11 @@ executable           short
   extensions:        DeriveDataTypeable
                      FlexibleContexts
   hs-source-dirs:    src
+
+executable           short
+  main-is:           short.hs
+  build-depends:     base, parsec >= 3.0.1,
+                     tlaplus, short
+  extensions:        DeriveDataTypeable
+                     FlexibleContexts
+  hs-source-dirs:    app
