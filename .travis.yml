@@ -6,7 +6,7 @@ cache:
   - $HOME/.stack
   - "$TRAVIS_BUILD_DIR/.stack-work"
 
-  before_install:
+before_install:
 # Download and unpack the stack executable
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
