@@ -15,9 +15,9 @@ import Language.TLAPlus.Pretty(prettyPrintCFG )
 import Text.ParserCombinators.Parsec.Pos as PPos
 
 boilerplate :: String -> SH_FL_Spec -> String
-boilerplate pname spec = 
-    unlines $ 
-      ["CONSTANT"] ++ 
+boilerplate pname spec =
+    unlines $
+      ["CONSTANT"] ++
       (map (\s -> s ++ " <- " ++ xify s) $ allSingleMsgHandlerNames spec)
 
 genCFGFile :: String -> SH_FL_Spec -> IO ()
@@ -28,8 +28,8 @@ genCFGFile pname spec =
        ; let roles = allRoles spec \\ ["GLOBAL"]
        ; let c' = complementConfig roles c
        ; let header = "\\* Generated file, please edit .config file"
-       ; writeFile (pname ++ ".cfg") 
-	   (unlines $ [header, prettyPrintCFG c',b])
+       ; writeFile (pname ++ ".cfg")
+           (unlines $ [header, prettyPrintCFG c',b])
        ; return ()
        }
 
@@ -38,9 +38,9 @@ readConfig cfgname =
     do { cfg <- readFile $ cfgname
        ; case (runParser cfgspec mkState cfgname cfg) of
            Left err -> do{ putStr $ "parse error in " ++ cfgname ++ " at "
-			 ; print err
-			 ; exitFailure
-			 }
+                         ; print err
+                         ; exitFailure
+                         }
            Right cfg  -> return cfg
        }
 
@@ -50,21 +50,21 @@ complementConfig roles config@(CFG_Config name l) =
         cs' = if cs == [] then [] else [CFG_ConstantDef upos cs]
      in CFG_Config name $ l ++ cs'
   where f :: CFG_Config -> String -> [CFG_ConstantEntry]
-	f config role = concat $ map (\name -> mk name config role)
-			             crashStartControlConst 
-	mk name config role = 
-	    if has name role config 
-	    then []
-	    else [CFG_Assignment upos
-		    (CFG_Ident upos $ name ++ role)
-		    (CFG_Set upos empty)]
+        f config role = concat $ map (\name -> mk name config role)
+                                     crashStartControlConst
+        mk name config role =
+            if has name role config
+            then []
+            else [CFG_Assignment upos
+                    (CFG_Ident upos $ name ++ role)
+                    (CFG_Set upos empty)]
         has :: String -> String -> CFG_Config -> Bool
         has name role config =
-	    [] /= (everything (++) ([] `mkQ` (g name role)) config)
-	  where g name role a@(CFG_Assignment _ (CFG_Ident _ c) _)
-	          | c == name ++ role = [True] -- e.g. "CrashR"
-	          | otherwise = []
-	        g _ _ _ = []
+            [] /= (everything (++) ([] `mkQ` (g name role)) config)
+          where g name role a@(CFG_Assignment _ (CFG_Ident _ c) _)
+                  | c == name ++ role = [True] -- e.g. "CrashR"
+                  | otherwise = []
+                g _ _ _ = []
 
 crashStartControlConst = ["InitDown", "Crash", "Start"]
 
@@ -74,5 +74,5 @@ mk_AS_Ident s = AS_Ident epos [] s
 mkPos :: String -> Int -> Int -> PPos.SourcePos
 mkPos name line col = newPos name line col
 
-upos = mkPos "foo" 0 0 
+upos = mkPos "foo" 0 0
 epos = (upos, Nothing, Nothing)

@@ -9,7 +9,7 @@ maintainer:          kramer@acm.org
 stability:           experimental
 synopsis:            XXX
 category:            Language
-description:         
+description:
   XXX
 
 build-type:          Simple
@@ -27,4 +27,4 @@ executable           sl
                      -fno-warn-missing-signatures
                      -fno-warn-name-shadowing
                      -fno-warn-unused-imports
-  extensions:        BangPatterns
+  extensions:        BangPatterns, LambdaCase

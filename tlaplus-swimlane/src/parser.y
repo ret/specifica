@@ -1,5 +1,6 @@
 -- An example demonstrating how to connect a Happy parser to an Alex lexer.
 {
+{-# OPTIONS_GHC -fno-warn-unused-matches #-}
 module Parser (Stmt(..), Ident(..), Expr(..),
 	       parser, listparser, statesectionparser, exprparser) where
 
@@ -18,22 +19,22 @@ import Lexer
 %tokentype { Token }
 
 %token  int		{ Int _ $$  }
-	atom		{ Atom _ $$  }
-	str		{ Str _ $$  }
-	'='		{ EQUAL _ }
-	'['		{ LAB _ }
-	']'		{ RAB _ }
-	'{'		{ LCB _ }
-	'}'		{ RCB _ }
-	'('		{ LB _ }
-	')'		{ RB _ }
-	','		{ COMMA _ }
+        atom		{ Atom _ $$  }
+        str		{ Str _ $$  }
+        '='		{ EQUAL _ }
+        '['		{ LAB _ }
+        ']'		{ RAB _ }
+        '{'		{ LCB _ }
+        '}'		{ RCB _ }
+        '('		{ LB _ }
+        ')'		{ RB _ }
+        ','		{ COMMA _ }
         '<<'            { LTLT _ }
         '>>'            { GTGT _ }
-	'|->'	        { BARARROW _ }
-	':>'	        { COLONGT _ }
-	'@@'	        { ATAT _ }
-	'/\\'	        { SLBSL _ }
+        '|->'	        { BARARROW _ }
+        ':>'	        { COLONGT _ }
+        '@@'	        { ATAT _ }
+        '/\\'	        { SLBSL _ }
 
 %%
 
@@ -96,10 +97,10 @@ data Expr = RecE (Map Ident Expr) |
 
 happyError :: [Token] -> a
 happyError tks = error ("Parse error at " ++ lcn ++ "\n")
-	where
-	lcn = 	case tks of
-		  [] -> "end of file"
-		  tk:_ -> "line " ++ show l ++ ", column " ++ show c
-			where
-			AlexPn _ l c = token_posn tk
+        where
+        lcn = 	case tks of
+        	  [] -> "end of file"
+        	  tk:_ -> "line " ++ show l ++ ", column " ++ show c
+        		where
+        		AlexPn _ l c = token_posn tk
 }

@@ -13,19 +13,19 @@ import Text.Regex as Regex
 import Debug.Trace(trace)
 
 import ExprHelper
-import Language.TLAPlus.Eval (ThrowsError(..))
+import Language.TLAPlus.Eval (ThrowsError)
 
 data Decoration = Color String
-                | Style String 
+                | Style String
                 | Label String
                 | LabelFont String
-                | TipLabel String 
-                | TipLabelFont String 
+                | TipLabel String
+                | TipLabelFont String
                 | HideDiff [String] deriving (Show, Eq, Ord)
 type RFieldName = String
 type SwimlaneName = String
 type CompDecoration = ([Decoration], (Maybe SwimlaneName, Maybe SwimlaneName))
-type DecorationFun = Expr -> (Int, String) -> (Int, String) 
+type DecorationFun = Expr -> (Int, String) -> (Int, String)
                      -> (Path, Path, Int) -> Maybe CompDecoration
 type StateAnnFun = Expr -> Maybe [Decoration]
 
@@ -39,7 +39,7 @@ type State = (Int, [Stmt]) -- 0 is initial state
 type DiffGroup = [DiffDescr]
 data PathRef = VarRef String
              | RecFieldRef String
-             | MapKeyRef String 
+             | MapKeyRef String
              | SeqPosRef Int deriving (Show, Eq, Ord)
 type Path = [PathRef]
 data DDQualifier = AtHead | AtTail deriving (Show, Eq, Ord)
@@ -67,13 +67,13 @@ stringPathRef (MapKeyRef   s) = s
 stringPathRef (SeqPosRef   i) = show i
 
 includesAnyPathRef :: [String] -> DiffDescr -> Bool
-includesAnyPathRef refs dd = 
+includesAnyPathRef refs dd =
     let path = getPath dd
         ref = List.find (\pr -> elem (stringPathRef pr) refs) path
      in Nothing /= ref
 
 diffSL :: State -> State -> StateChange
-diffSL (idx, sl) (idx', sl') = 
+diffSL (_idx, sl) (idx', sl') =
   let l = map (\s -> let Bind i e = s
                          Ident id = i
                       in case lookupS i sl' of
@@ -83,7 +83,7 @@ diffSL (idx, sl) (idx', sl') =
   where lookupS :: Ident -> [Stmt] -> Maybe Stmt
         lookupS i (Bind id e:sl) | i == id   = Just (Bind id e)
                                  | otherwise = lookupS i sl
-        lookupS i [] = Nothing
+        lookupS _i [] = Nothing
 
 diffE :: Path -> Expr -> Expr -> DiffGroup
 diffE p (RecE m) (RecE m') = diffRec p m m'
@@ -150,7 +150,7 @@ diffSeq p s s' =
               kchg = ks `List.intersect` ks'
            in concat [map (\k -> DRem Nothing (p++[spr k]) (s!!k)) krem,
                       map (\k -> DAdd Nothing (p++[spr k]) (s'!!k)) kadd,
-                      concat $ map (\k -> diffE (p++[spr k]) (s!!k) (s'!!k)) 
+                      concat $ map (\k -> diffE (p++[spr k]) (s!!k) (s'!!k))
                                    kchg]
         prefixA p s s' =                                  -- s  0 1 2
           let ks = [length s .. length s'-1]              -- s' 0 1 2 3 4
