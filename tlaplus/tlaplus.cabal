@@ -9,8 +9,8 @@ maintainer:          kramer@acm.org
 stability:           experimental
 synopsis:            TLA+ AST, parser and pretty printer
 category:            Language
-description:         
-  Library to facilitate TLA+ processing in Haskell. 
+description:
+  Library to facilitate TLA+ processing in Haskell.
   For TLA+ information, please refer to http://www.lamport.org
 
 build-type:          Simple
@@ -28,8 +28,6 @@ library
   hs-source-dirs:    src
   ghc-options:       -Wall
                      -fwarn-tabs
-                     -fno-warn-missing-signatures
                      -fno-warn-name-shadowing
-                     -fno-warn-unused-imports
   extensions:        DeriveDataTypeable
                      FlexibleContexts

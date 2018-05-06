@@ -31,6 +31,11 @@ library:
     default-extensions:
       - BangPatterns
       - LambdaCase
+    ghc-options:
+      - -Wall
+      - -fwarn-tabs
+      - -fno-warn-name-shadowing
+
 executables:
   sl:
     main:           Sl.hs
@@ -40,3 +45,7 @@ executables:
       - containers
       - tlaplus-swimlane
       - regex-compat
+    ghc-options:
+      - -Wall
+      - -fwarn-tabs
+      - -fno-warn-name-shadowing
