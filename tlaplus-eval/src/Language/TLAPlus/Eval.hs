@@ -1,19 +1,22 @@
 module Language.TLAPlus.Eval where
 
-import Prelude hiding ((<$>))
-import Control.Monad.Error
-import Debug.Trace as Trace
-import qualified Data.Set as Set (union, intersection,
-                                  isSubsetOf, empty, size, insert)
-import Data.Set as Set (fromList, toList, elems, (\\), member, isSubsetOf)
-import Data.List as List (find, elemIndex, map, elem, lookup)
-import qualified Data.Map as Map (union, lookup, insert, empty, singleton,
-                                  keys, elems, fromList, toList)
+import           Control.Monad.Error
+import           Data.List               as List (elem, elemIndex, find, lookup,
+                                                  map)
+import qualified Data.Map                as Map (elems, empty, fromList, insert,
+                                                 keys, lookup, singleton,
+                                                 toList, union)
+import           Data.Set                as Set (elems, fromList, isSubsetOf,
+                                                 member, toList, (\\))
+import qualified Data.Set                as Set (empty, insert, intersection,
+                                                 isSubsetOf, size, union)
+import           Debug.Trace             as Trace
+import           Prelude                 hiding ((<$>))
 
-import Text.PrettyPrint.Leijen
+import           Text.PrettyPrint.Leijen
 
-import Language.TLAPlus.Syntax
-import Language.TLAPlus.Pretty
+import           Language.TLAPlus.Pretty
+import           Language.TLAPlus.Syntax
 
 eval :: [AS_Spec] -> CFG_Config -> ThrowsError [VA_Value]
 eval specs cfg = evalReturnEnv specs cfg >>= \(_, vs) -> return vs
@@ -142,8 +145,8 @@ evalE env e@(AS_Let _info units expr) =
       }
     where filterUnits = filter (\u -> case u of
             (AS_FunctionDef _ _ _ _) -> True
-            (AS_OperatorDef _ _ _) -> True
-            otherwise -> False)
+            (AS_OperatorDef _ _ _)   -> True
+            otherwise                -> False)
 
 evalE env e@(AS_IF _info b x y) =
     evalET env b >>= \res -> case res of
@@ -269,7 +272,7 @@ toInfoE :: AS_InfoU -> AS_UnitDef -> AS_InfoE
 toInfoE pos u = (pos, Just u, Nothing)
 
 nameU :: AS_UnitDef -> AS_Expression
-nameU (AS_FunctionDef _ head _ _) = head
+nameU (AS_FunctionDef _ head _ _)             = head
 nameU (AS_OperatorDef _ (AS_OpHead head _) _) = head
 
 type Infix_Info = (Env, AS_Expression, AS_Expression, AS_Expression)
@@ -393,7 +396,7 @@ infix_op_table =
     (AS_Mult, (op_mult))
   , (AS_Cup, (op_cup)), (AS_Cap, (op_cap))
   , (AS_EQ, (op_eq)), (AS_NEQ, (op_neq)), (AS_LT, (op_lt)),
-    (AS_LTEQ, (op_lteq)), (AS_GT, (op_gt))
+    (AS_LTEQ, (op_lteq)), (AS_GTEQ, (op_gteq)), (AS_GT, (op_gt))
   , (AS_COLONGT, (op_colongt)), (AS_ATAT, (op_atat))
   , (AS_DOTDOT, (op_dotdot))
   , (AS_DOT, (op_dot))
@@ -423,13 +426,13 @@ postfix_op_table =
 
 -- infix
 op_plus i (VA_Int a) (VA_Int b) = return $ VA_Int $ a + b
-op_plus i va vb = throwError $ TypeMissmatch i va vb [TY_Int]
+op_plus i va vb                 = throwError $ TypeMissmatch i va vb [TY_Int]
 
 op_minus i (VA_Int a) (VA_Int b) = return $ VA_Int $ a - b
-op_minus i va vb = throwError $ TypeMissmatch i va vb [TY_Int]
+op_minus i va vb                 = throwError $ TypeMissmatch i va vb [TY_Int]
 
 op_mult i (VA_Int a) (VA_Int b) = return $ VA_Int $ a * b
-op_mult i va vb = throwError $ TypeMissmatch i va vb [TY_Int]
+op_mult i va vb                 = throwError $ TypeMissmatch i va vb [TY_Int]
 
 op_cup i (VA_Set a) (VA_Set b) = return $ VA_Set $ Set.union a b
 op_cup i (VA_Set a) b = return $ VA_Set $ Set.insert b a
@@ -438,7 +441,7 @@ op_cup i a@(VA_RecType _) b@(VA_RecType _) =
 op_cup i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 
 op_cap i (VA_Set a) (VA_Set b) = return $ VA_Set $ Set.intersection a b
-op_cap i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
+op_cap i va vb                 = throwError $ TypeMissmatch i va vb [TY_Set]
 
 -- FIXME see book, p. 264 (comparable)
 op_eq i (VA_Atom a) (VA_Atom b) = return $ VA_Bool $ a == b
@@ -456,13 +459,16 @@ op_neq i a b = if typeOf a == typeOf b
                  else throwError $ TypeMissmatch i a b $ [typeOf a, typeOf b]
 
 op_lt i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a < b
-op_lt i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
+op_lt i a b                   = throwError $ TypeMissmatch i a b $ [TY_Int]
 
 op_lteq i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a <= b
-op_lteq i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
+op_lteq i a b                   = throwError $ TypeMissmatch i a b $ [TY_Int]
 
 op_gt i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a > b
-op_gt i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
+op_gt i a b                   = throwError $ TypeMissmatch i a b $ [TY_Int]
+
+op_gteq i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a >= b
+op_gteq i a b                   = throwError $ TypeMissmatch i a b $ [TY_Int]
 
 op_subseteq i (VA_Set a) (VA_Set b) = return $ VA_Bool $ Set.isSubsetOf a b
 op_subseteq i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
@@ -558,7 +564,7 @@ op_and i (VA_Bool a) (VA_Bool b) = return $ VA_Bool (a && b)
 op_and i va vb = throwError $ TypeMissmatch i va vb [TY_Bool]
 
 op_or i (VA_Bool a) (VA_Bool b) = return $ VA_Bool (a || b)
-op_or i va vb = throwError $ TypeMissmatch i va vb [TY_Bool]
+op_or i va vb                   = throwError $ TypeMissmatch i va vb [TY_Bool]
 
 op_funapp i va argv@(VA_FunArgList argvaluelist) =
   let (env, e, ea, eb) = i in
@@ -874,7 +880,7 @@ lookupBinding :: AS_Expression -> Env -> String -> ThrowsError VA_Value
 lookupBinding i env kind =
     case lookup (toId i) env of
       Just expr -> return $ expr
-      Nothing -> throwError $ NameNotInScope i kind
+      Nothing   -> throwError $ NameNotInScope i kind
 
 toId :: AS_Expression -> Id
 toId (AS_Ident _info qual name) = (qual, name)
