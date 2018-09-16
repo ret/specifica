@@ -1,4 +1,5 @@
-# Specifica
+# Specifica [![Build Status](https://travis-ci.org/ret/specifica.svg?branch=master)](https://travis-ci.org/ret/specifica)
+
 
 Specifica is a collection of TLA+ related Haskell libraries comprising a tlaplus parser, pretty printer, and expression evaluator. The code here is meant to serve as a starting point for developers who wish to build small TLA+ related utilities quickly.
 
