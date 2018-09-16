@@ -275,7 +275,7 @@ toInfoE :: AS_InfoU -> AS_UnitDef -> AS_InfoE
 toInfoE pos u = (pos, Just u, Nothing)
 
 nameU :: AS_UnitDef -> AS_Expression
-nameU (AS_FunctionDef _ head _ _) = head
+nameU (AS_FunctionDef _ head _ _)             = head
 nameU (AS_OperatorDef _ (AS_OpHead head _) _) = head
 nameU _ = error "unspecified"
 
@@ -401,7 +401,7 @@ infix_op_table =
     (AS_Mult, (op_mult))
   , (AS_Cup, (op_cup)), (AS_Cap, (op_cap))
   , (AS_EQ, (op_eq)), (AS_NEQ, (op_neq)), (AS_LT, (op_lt)),
-    (AS_LTEQ, (op_lteq)), (AS_GT, (op_gt))
+    (AS_LTEQ, (op_lteq)), (AS_GTEQ, (op_gteq)), (AS_GT, (op_gt))
   , (AS_COLONGT, (op_colongt)), (AS_ATAT, (op_atat))
   , (AS_DOTDOT, (op_dotdot))
   , (AS_DOT, (op_dot))
@@ -885,7 +885,7 @@ lookupBinding :: AS_Expression -> Env -> String -> ThrowsError VA_Value
 lookupBinding i env kind =
     case lookup (toId i) env of
       Just expr -> return $ expr
-      Nothing -> throwError $ NameNotInScope i kind
+      Nothing   -> throwError $ NameNotInScope i kind
 
 toId :: AS_Expression -> Id
 toId (AS_Ident _info qual name) = (qual, name)
