@@ -1,0 +1,27 @@
+sudo: false
+
+language: generic
+cache:
+  directories:
+  - $HOME/.stack
+  - "$TRAVIS_BUILD_DIR/.stack-work"
+
+before_install:
+# Download and unpack the stack executable
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
+install:
+  - stack build --only-dependencies --install-ghc
+  # - stack install cabal-install --install-ghc
+  - stack install alex-3.1.7 happy-1.19.5
+  - alex  -V
+  - happy  -V
+  - stack install weeder
+
+script:
+  - stack build
+  # - curl -sL https://raw.github.com/ndmitchell/hlint/master/misc/travis.sh | sh -s .
+  - curl -sL https://raw.github.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
+  # - stack exec weeder -- .

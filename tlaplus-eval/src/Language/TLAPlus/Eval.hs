@@ -1,22 +1,22 @@
 module Language.TLAPlus.Eval where
 
-import           Control.Monad.Error
-import           Data.List               as List (elem, elemIndex, find, lookup,
-                                                  map)
-import qualified Data.Map                as Map (elems, empty, fromList, insert,
-                                                 keys, lookup, singleton,
-                                                 toList, union)
-import           Data.Set                as Set (elems, fromList, isSubsetOf,
-                                                 member, toList, (\\))
-import qualified Data.Set                as Set (empty, insert, intersection,
-                                                 isSubsetOf, size, union)
-import           Debug.Trace             as Trace
-import           Prelude                 hiding ((<$>))
+import Prelude hiding ((<$>))
+-- import Control.Monad.Error
+import Control.Monad.Except
+import Debug.Trace as Trace
+import qualified Data.Set as Set (union, intersection,
+                                  isSubsetOf, empty, size, insert)
+import Data.Set as Set (fromList, toList, elems, (\\), member, isSubsetOf)
+import Data.List as List (find, elemIndex, map, elem, lookup)
+import qualified Data.Map as Map (union, lookup, insert, empty, singleton,
+                                  keys, elems, fromList, toList)
 
-import           Text.PrettyPrint.Leijen
+import GHC.Stack
 
-import           Language.TLAPlus.Pretty
-import           Language.TLAPlus.Syntax
+import Text.PrettyPrint.Leijen
+
+import Language.TLAPlus.Syntax
+import Language.TLAPlus.Pretty
 
 eval :: [AS_Spec] -> CFG_Config -> ThrowsError [VA_Value]
 eval specs cfg = evalReturnEnv specs cfg >>= \(_, vs) -> return vs
@@ -34,7 +34,7 @@ evalReturnEnv specs cfg =
                     -> (AS_Expression, VA_Value)
           mkBinding q (i,v) = (toASIdent q i, toASValue v)
           toASIdent :: String -> CFG_Ident -> AS_Expression
-          toASIdent q (CFG_Ident _ i) = -- FIXME what about q?
+          toASIdent _q (CFG_Ident _ i) = -- FIXME what about q?
               AS_Ident (mkDummyInfo "a-cfg-value") [] i
           toASValue :: CFG_Value -> VA_Value
           toASValue (CFG_Atom _ s) = VA_Atom s
@@ -77,7 +77,7 @@ evalUnit (env,vs) u@(AS_OperatorDef _ (AS_OpHead head _) _) =
       ; env' <- bind env (head, v)
       ; return $ (env', vs)
       }
-evalUnit acc u =
+evalUnit _acc u =
     throwError $ Default ("evalUnit, case missing "++show u)
 
 -- FIXME see evalU (also used in evalE of AS_Let defs,
@@ -88,10 +88,11 @@ evalU env u@(AS_FunctionDef infoU head quants e) =
     if length quants == 0 -- FIXME check to see if any free vars exist
     then evalET env e -- is a constant with free vars bound by env
     else return $ VA_FunctionDef (toInfoE infoU u) head quants e
-evalU env u@(AS_OperatorDef infoU h@(AS_OpHead head args) e) =
+evalU _env u@(AS_OperatorDef infoU h@(AS_OpHead _head _args) e) =
     -- NOTE even if the arity is 0, we don't evalE the expression since the
     -- expression e could include uninitialized variables (e.g. Foo == var).
     return $ VA_OperatorDef (toInfoE infoU u) h e
+evalU _ _ = error "unspecified"
 
 evalET :: Env -> AS_Expression -> ThrowsError VA_Value
 evalET env e =
@@ -104,7 +105,7 @@ evalET env e =
     else evalE env e
 
 evalE :: Env -> AS_Expression -> ThrowsError VA_Value
-evalE env i@(AS_Ident _info quallist name) = --FIXME lookup proper env for qual
+evalE env i@(AS_Ident _info _quallist _name) = --FIXME lookup proper env for qual
     lookupBinding i env "identifier" >>= \e -> case e of
 {-
         -- FIXME check bounds on function invocation!
@@ -116,9 +117,9 @@ evalE env i@(AS_Ident _info quallist name) = --FIXME lookup proper env for qual
                       Nothing -> return $ VA_Var (Just (VA_String "undefined")) -- throwError $ RdBeforeWr i
                       Just v' -> return v'
       (VA_OperatorDef _info _head opExpr) -> evalET env opExpr
-      otherwise -> return e
+      _ -> return e
 
-evalE env e@(AS_FunArgList _ l) =
+evalE env _e@(AS_FunArgList _ l) =
     VA_FunArgList `liftM` mapM (\e -> evalET env e) l
 
 evalE env e@(AS_OpApp _info qname exprargs) = -- FIXME cross check w/ Ident hdl
@@ -126,10 +127,10 @@ evalE env e@(AS_OpApp _info qname exprargs) = -- FIXME cross check w/ Ident hdl
       ; case op of
           (VA_OperatorDef _info (AS_OpHead _name argnames) expr) ->
               evalOperator(env, argnames, exprargs, expr)
-          otherwise ->
+          _ ->
               throwError $ Default ("FIXME - op="++show op++"////"++show e)
       }
-evalE env e@(AS_FunctionType _info a b) =
+evalE env _e@(AS_FunctionType _info a b) =
     do{ a' <- evalET env a
       ; b' <- evalET env b
       ; return $ VA_FunType a' b'
@@ -137,7 +138,7 @@ evalE env e@(AS_FunctionType _info a b) =
 evalE env e@(AS_PrefixOP _info op a) = (evalOpPrefix env op) e a
 evalE env e@(AS_PostfixOP _info op a) = (evalOpPostfix env op) e a
 evalE env e@(AS_InfixOP _info op a b) = (evalOpInfix env op) e a b
-evalE env e@(AS_Let _info units expr) =
+evalE env _e@(AS_Let _info units expr) =
     do{ env' <- foldM (\env u -> evalU env u >>= \v ->
                          bind env (nameU u, v)
                       ) env (filterUnits units)
@@ -145,14 +146,14 @@ evalE env e@(AS_Let _info units expr) =
       }
     where filterUnits = filter (\u -> case u of
             (AS_FunctionDef _ _ _ _) -> True
-            (AS_OperatorDef _ _ _)   -> True
-            otherwise                -> False)
+            (AS_OperatorDef _ _ _) -> True
+            _ -> False)
 
 evalE env e@(AS_IF _info b x y) =
     evalET env b >>= \res -> case res of
                                (VA_Bool True)  -> evalET env x
                                (VA_Bool False) -> evalET env y
-                               otherwise -> throwError $
+                               _ -> throwError $
                                  IllegalType e b res TY_Bool "conditional"
 evalE env (AS_DiscreteSet _info  le) =
     VA_Set `liftM` Set.fromList `liftM` mapM (\e -> evalET env e) le
@@ -169,9 +170,9 @@ evalE env e@(AS_Quantified _info qkind [qbound] expr) = -- FIXME singleton!
                      Right (VA_Bool b) -> return $ VA_Bool b
                      Right other -> throwError $
                        IllegalType e expr other TY_Bool "quantifier"
-                     Left error@(KeyNotFound _ _ _ _ _) -> -- ignore "not found"
+                     Left (KeyNotFound _ _ _ _ _) -> -- ignore "not found"
                        return $ VA_Bool False
-                     Left error -> throwError error
+                     Left msg -> throwError msg
                  ) envs
       ; let b = (quant qkind) (\(VA_Bool v) -> v) bvs
       ; return $ (VA_Bool b)
@@ -195,26 +196,26 @@ evalE env e@(AS_Choose _info (AS_QBound1 qvar qexpr) bexpr) =
                      Right (VA_Bool b) -> return b
                      Right other -> throwError $
                        IllegalType e bexpr other TY_Bool "CHOOSE"
-                     Left error@(KeyNotFound _ _ _ _ _) -> -- ignore "not found"
+                     Left (KeyNotFound _ _ _ _ _) -> -- ignore "not found"
                        return False
-                     Left error -> throwError error
+                     Left msg -> throwError msg
              ) elements
       ; case v of
           Just v' -> return v'
           Nothing -> throwError $ ChooseNoMatch qvar qexpr bexpr elements env
       }
     where findM :: (Monad m) => (a -> m Bool) -> [a] -> m (Maybe a)
-          findM f [] = return Nothing
+          findM _ [] = return Nothing
           findM f (x:xs) = do { b <- f x
                               ; if b then return (Just x) else findM f xs }
 evalE env (AS_Tuple _info exprs) =
     VA_Seq `liftM` mapM (evalET env) exprs
 evalE env e@(AS_LAND _info exprs) = list_bool e env all exprs
 evalE env e@(AS_LOR _info exprs) = list_bool e env any exprs
-evalE env (AS_Num _info n) = return $ VA_Int n
-evalE env (AS_Bool _info b) = return $ VA_Bool b
-evalE env (AS_StringLiteral _info s) = return $ VA_String s
-evalE env e@(AS_RecordType _info l) =
+evalE _env (AS_Num _info n) = return $ VA_Int n
+evalE _env (AS_Bool _info b) = return $ VA_Bool b
+evalE _env (AS_StringLiteral _info s) = return $ VA_String s
+evalE env (AS_RecordType _info l) =
     foldM (\(VA_RecType map) -- FIXME Austin, do not enum the elements!
             (AS_RecordElementType _info (AS_Field f) ve) ->
                 evalET env ve >>= \v ->
@@ -229,7 +230,7 @@ evalE env e@(AS_SetComprehension _info (AS_QBound1 qvar qexpr) expr) =
                     case bv of
                            (VA_Bool True) -> return $ acc ++ [v]
                            (VA_Bool False) -> return acc
-                           otherwise -> throwError $
+                           _ -> throwError $
                                    IllegalType e expr v TY_Bool "set comprehension"
 
               ) [] envs
@@ -242,31 +243,33 @@ evalE env e@(AS_SetGeneration _info expr (AS_QBound1 qvar qexpr)) =
       ; return $ VA_Set $ Set.fromList vs
       }
 evalE env e@(AS_Case _info arms other) =
-    do{ arm <- findM (\(AS_CaseArm _info cexpr vexpr) ->
+    do{ arm <- findM (\(AS_CaseArm _info cexpr _vexpr) ->
                         evalET env cexpr >>= \bv ->
                           case bv of
                             (VA_Bool b) -> return b
-                            otherwise -> throwError $
+                            _ -> throwError $
                                    IllegalType e cexpr bv TY_Bool "case condition"
                      ) arms
       ; case arm of
           Just (AS_CaseArm _info _bexpr vexpr) -> evalET env vexpr
+          Just _ -> error "unspecified"
           Nothing ->
               case other of
                 Just (AS_OtherCaseArm _info otherexpr) -> evalET env otherexpr
+                Just (AS_CaseArm _ _ _) -> error "unspecified"
                 Nothing -> throwError $ Default $
                   "No case arm matched and no 'other' clause specified."
       }
     where findM :: (Monad m) => (a -> m Bool) -> [a] -> m (Maybe a)
-          findM f [] = return Nothing
+          findM _ [] = return Nothing
           findM f (x:xs) = do { b <- f x
                               ; if b then return (Just x) else findM f xs }
-evalE env e@(AS_BIF mod name) =
+evalE env (AS_BIF mod name) =
     let Just fun = List.lookup (mod, name) bif_Table
      in fun env
 
 -- add type otherwise
-evalE env e = throwError $ NoRuleError e -- FIXME for debugging only
+evalE _env e = throwError $ NoRuleError e -- FIXME for debugging only
 
 toInfoE :: AS_InfoU -> AS_UnitDef -> AS_InfoE
 toInfoE pos u = (pos, Just u, Nothing)
@@ -274,20 +277,21 @@ toInfoE pos u = (pos, Just u, Nothing)
 nameU :: AS_UnitDef -> AS_Expression
 nameU (AS_FunctionDef _ head _ _)             = head
 nameU (AS_OperatorDef _ (AS_OpHead head _) _) = head
+nameU _ = error "unspecified"
 
 type Infix_Info = (Env, AS_Expression, AS_Expression, AS_Expression)
 type Prefix_Info = (AS_Expression, AS_Expression)
 type Postfix_Info = (AS_Expression, AS_Expression)
 
 
-eval_dot op loc@(env, parent, a, b) va =
+eval_dot op loc@(env, _parent, _, b) va =
   if op == AS_DOT
     -- FIXME perhaps also check to make sure "name" is not
     -- bound!
   then case b of
          (AS_Ident _info [] name) ->
            op_dot loc va (VA_String name)
-         otherwise ->
+         _ ->
            do{ vb <- (evalET env b)
              ; infix_op op loc va vb
              }
@@ -306,20 +310,21 @@ evalOpInfix :: Env
 -- (e.g. Next = A \/ B), or at A and B and the \/ takes it from there?
 -- What is the right monad to combine these sets of values (a value being the
 -- record of all variables in the TLA+ spec).
-evalOpInfix env op@AS_EQ parent
-            (AS_PostfixOP _ AS_Prime a@(AS_Ident _ [] i)) b =
+evalOpInfix env _op@AS_EQ _parent
+            (AS_PostfixOP _ AS_Prime a@(AS_Ident _ [] _i)) b =
+    evalET env a >>= \case
+      (VA_Var _) -> do{ vb <- (evalET env b)
+                      ; env' <- replace env (a, vb)
+                      ; Trace.trace (ppEnv env') $ return vb
+                      }
+      _ -> error "unspecified"
+evalOpInfix env op@AS_EQ parent a@(AS_Ident _ [] _i) b =
     evalET env a >>= \va -> case va of
       (VA_Var _) -> do{ vb <- (evalET env b)
                       ; env' <- replace env (a, vb)
                       ; Trace.trace (ppEnv env') $ return vb
                       }
-evalOpInfix env op@AS_EQ parent a@(AS_Ident _ [] i) b =
-    evalET env a >>= \va -> case va of
-      (VA_Var _) -> do{ vb <- (evalET env b)
-                      ; env' <- replace env (a, vb)
-                      ; Trace.trace (ppEnv env') $ return vb
-                      }
-      otherwise ->
+      _ ->
         case va of
           {-- In TLA+ r.a and r."a" (so is r["a"], but r[a] is not) are the
           same if r is a record. All the quoted forms work well without
@@ -327,12 +332,12 @@ evalOpInfix env op@AS_EQ parent a@(AS_Ident _ [] i) b =
           treat 'a' as an identifier (unbound) if r is a record.  Here
           we handle the r.a case.  The r[a] case is different in that a is
           treated as an identifier and hence needs no special handling. --}
-          (VA_Rec m) -> eval_dot op (env, parent, a, b) va
+          (VA_Rec _m) -> eval_dot op (env, parent, a, b) va
             -- FIXME, does TLA+ allow set comprehension over rec types?
             --   LET B == {1,2} S == {[t: {"S1"}, b: B], [t: {"S2"}, b: B]}
             --    IN { a.t : a \in S }
-          (VA_RecType m) -> eval_dot op (env, parent, a, b) va
-          otherwise -> do{ vb <- (evalET env b)
+          (VA_RecType _m) -> eval_dot op (env, parent, a, b) va
+          _ -> do{ vb <- (evalET env b)
                          ; infix_op op (env, parent, a, b) va vb
                          }
 evalOpInfix env op parent a b =
@@ -344,12 +349,12 @@ evalOpInfix env op parent a b =
         treat 'a' as an identifier (unbound) if r is a record.  Here
         we handle the r.a case.  The r[a] case is different in that a is
         treated as an identifier and hence needs no special handling. --}
-        (VA_Rec m) -> eval_dot op (env, parent, a, b) va
+        (VA_Rec _m) -> eval_dot op (env, parent, a, b) va
           -- FIXME, does TLA+ allow set comprehension over rec types?
           --   LET B == {1,2} S == {[t: {"S1"}, b: B], [t: {"S2"}, b: B]}
           --    IN { a.t : a \in S }
-        (VA_RecType m) -> eval_dot op (env, parent, a, b) va
-        otherwise -> do{ vb <- (evalET env b)
+        (VA_RecType _m) -> eval_dot op (env, parent, a, b) va
+        _ -> do{ vb <- (evalET env b)
                        ; infix_op op (env, parent, a, b) va vb
                        }
     }
@@ -425,55 +430,52 @@ postfix_op_table =
   [ (AS_Prime, (op_prime)) ]
 
 -- infix
-op_plus i (VA_Int a) (VA_Int b) = return $ VA_Int $ a + b
-op_plus i va vb                 = throwError $ TypeMissmatch i va vb [TY_Int]
+op_plus _i (VA_Int a) (VA_Int b) = return $ VA_Int $ a + b
+op_plus i va vb = throwError $ TypeMissmatch i va vb [TY_Int]
 
-op_minus i (VA_Int a) (VA_Int b) = return $ VA_Int $ a - b
-op_minus i va vb                 = throwError $ TypeMissmatch i va vb [TY_Int]
+op_minus _i (VA_Int a) (VA_Int b) = return $ VA_Int $ a - b
+op_minus i va vb = throwError $ TypeMissmatch i va vb [TY_Int]
 
-op_mult i (VA_Int a) (VA_Int b) = return $ VA_Int $ a * b
-op_mult i va vb                 = throwError $ TypeMissmatch i va vb [TY_Int]
+op_mult _i (VA_Int a) (VA_Int b) = return $ VA_Int $ a * b
+op_mult i va vb = throwError $ TypeMissmatch i va vb [TY_Int]
 
-op_cup i (VA_Set a) (VA_Set b) = return $ VA_Set $ Set.union a b
-op_cup i (VA_Set a) b = return $ VA_Set $ Set.insert b a
-op_cup i a@(VA_RecType _) b@(VA_RecType _) =
+op_cup _i (VA_Set a) (VA_Set b) = return $ VA_Set $ Set.union a b
+op_cup _i (VA_Set a) b = return $ VA_Set $ Set.insert b a
+op_cup _i a@(VA_RecType _) b@(VA_RecType _) =
     return $ VA_Set $ Set.fromList [a,b]
 op_cup i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 
-op_cap i (VA_Set a) (VA_Set b) = return $ VA_Set $ Set.intersection a b
-op_cap i va vb                 = throwError $ TypeMissmatch i va vb [TY_Set]
+op_cap _i (VA_Set a) (VA_Set b) = return $ VA_Set $ Set.intersection a b
+op_cap i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 
 -- FIXME see book, p. 264 (comparable)
-op_eq i (VA_Atom a) (VA_Atom b) = return $ VA_Bool $ a == b
-op_eq i (VA_Atom a) b = return $ VA_Bool False
-op_eq i a (VA_Atom b) = return $ VA_Bool False
+op_eq _i (VA_Atom a) (VA_Atom b) = return $ VA_Bool $ a == b
+op_eq _i (VA_Atom _a) _b = return $ VA_Bool False
+op_eq _i _a (VA_Atom _b) = return $ VA_Bool False
 op_eq i a b = if typeOf a == typeOf b
                 then return $ VA_Bool $ a == b
                 else throwError $ TypeMissmatch i a b $ [typeOf a, typeOf b]
 
-op_neq i (VA_Atom a) (VA_Atom b) = return $ VA_Bool $ a /= b
-op_neq i (VA_Atom a) b = return $ VA_Bool True
-op_neq i a (VA_Atom b) = return $ VA_Bool True
+op_neq _i (VA_Atom a) (VA_Atom b) = return $ VA_Bool $ a /= b
+op_neq _i (VA_Atom _a) _b = return $ VA_Bool True
+op_neq _i _a (VA_Atom _b) = return $ VA_Bool True
 op_neq i a b = if typeOf a == typeOf b
                  then return $ VA_Bool $ a /= b
                  else throwError $ TypeMissmatch i a b $ [typeOf a, typeOf b]
 
-op_lt i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a < b
-op_lt i a b                   = throwError $ TypeMissmatch i a b $ [TY_Int]
+op_lt _i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a < b
+op_lt i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
 
-op_lteq i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a <= b
-op_lteq i a b                   = throwError $ TypeMissmatch i a b $ [TY_Int]
+op_lteq _i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a <= b
+op_lteq i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
 
-op_gt i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a > b
-op_gt i a b                   = throwError $ TypeMissmatch i a b $ [TY_Int]
+op_gt _i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a > b
+op_gt i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
 
-op_gteq i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a >= b
-op_gteq i a b                   = throwError $ TypeMissmatch i a b $ [TY_Int]
-
-op_subseteq i (VA_Set a) (VA_Set b) = return $ VA_Bool $ Set.isSubsetOf a b
+op_subseteq _i (VA_Set a) (VA_Set b) = return $ VA_Bool $ Set.isSubsetOf a b
 op_subseteq i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 
-op_setminus i (VA_Set a) (VA_Set b) = return $ VA_Set $ a \\ b
+op_setminus _i (VA_Set a) (VA_Set b) = return $ VA_Set $ a \\ b
 op_setminus i va vb = throwError $ TypeMissmatch i va vb [TY_Int]
 
 -- FIXME see book, p. 264
@@ -482,19 +484,19 @@ op_in i va (VA_Set s) =
     then return $ VA_Bool False
     else
       case head $ elems s of
-        (VA_RecType m) ->
+        (VA_RecType _m) ->
             do{ bs <- mapM (\rectype -> op_in i va rectype)
                            (elems s)
               ; let b = any (\(VA_Bool b) -> b) bs
               ; return $ VA_Bool b
               }
-        otherwise -> return $ VA_Bool (member va s)           -- Set of ...
+        _ -> return $ VA_Bool (member va s)           -- Set of ...
 op_in i (VA_Seq la) (VA_Seq lb) =
     do{ if length la == length lb -- FIXME need an allM function!
         then do{ bs <- mapM (\(as,bs) ->
                          op_in i as bs >>= \b -> case b of -- FIXME >>=typeChec
                            (VA_Bool _) -> return b
-                           otherwise -> throwError $ Default "bool expected")
+                           _ -> throwError $ Default "bool expected")
                        (zip la lb)
                 ; return $ VA_Bool $ all (\(VA_Bool b) -> b) bs
                 }
@@ -531,12 +533,12 @@ op_in i va vb = throwError $ TypeMissmatch i va vb [TY_Set, TY_Seq]
 op_notin i va vb = do{ VA_Bool res <- op_in i va vb
                      ; return $ VA_Bool (not res) }
 
-op_colongt i va vb = return $ VA_Map (Map.singleton va vb)
+op_colongt _i va vb = return $ VA_Map (Map.singleton va vb)
 
-op_atat i (VA_Map va) (VA_Map vb) = return $ VA_Map (Map.union va vb)
+op_atat _i (VA_Map va) (VA_Map vb) = return $ VA_Map (Map.union va vb)
 op_atat i va vb = throwError $ TypeMissmatch i va vb [TY_Map]
 
-op_dotdot i (VA_Int a) (VA_Int b) = return $
+op_dotdot _i (VA_Int a) (VA_Int b) = return $
     VA_Set $ Set.fromList (map VA_Int [a .. b])
 op_dotdot i va vb = throwError $ TypeMissmatch i va vb [TY_Int]
 
@@ -555,19 +557,19 @@ op_dot i va@(VA_RecType a) vb@(VA_String _) = -- does TLA+ even allow this?
       Just v -> return v                      --   {m.t: m \in Msg}
       Nothing -> let (env, e, _, _) = i in throwError $
         KeyNotFound env e va vb "record type field reference"
-op_dot i va vb = throwError $
+op_dot _i va vb = throwError $
     Default ("Cannot apply (.) value "++show vb++" to subject "++show va)
 
-op_times i a b = return $ VA_Seq $ [a,b] -- tuples are seq of 2 elements
+op_times _i a b = return $ VA_Seq $ [a,b] -- tuples are seq of 2 elements
 
-op_and i (VA_Bool a) (VA_Bool b) = return $ VA_Bool (a && b)
+op_and _i (VA_Bool a) (VA_Bool b) = return $ VA_Bool (a && b)
 op_and i va vb = throwError $ TypeMissmatch i va vb [TY_Bool]
 
-op_or i (VA_Bool a) (VA_Bool b) = return $ VA_Bool (a || b)
-op_or i va vb                   = throwError $ TypeMissmatch i va vb [TY_Bool]
+op_or _i (VA_Bool a) (VA_Bool b) = return $ VA_Bool (a || b)
+op_or i va vb = throwError $ TypeMissmatch i va vb [TY_Bool]
 
 op_funapp i va argv@(VA_FunArgList argvaluelist) =
-  let (env, e, ea, eb) = i in
+  let (env, e, _ea, _eb) = i in
   case va of
     (VA_Map map) -> mapLookup env argvaluelist map e va "map"
     (VA_Rec map) -> mapLookup env argvaluelist map e va "record"
@@ -585,7 +587,7 @@ op_funapp i va argv@(VA_FunArgList argvaluelist) =
     (VA_Atom _) -> throwError $ FunAppIllegalOperand e va argv
     (VA_FunctionDef _info _name qbounds expr) ->
        -- FIXME call this evalFunction(...)
-       do{ let argnames = concat $ map (\(AS_QBoundN l e) -> l) qbounds
+       do{ let argnames = concat $ map (\(AS_QBoundN l _e) -> l) qbounds
          -- Bring the outer env into scope along with qbounds bound vars of the function.
          -- This is important to let Nat get passed into the function domain (n \in Nat), as in:
          --   LET Nat == 1..3
@@ -601,12 +603,14 @@ op_funapp i va argv@(VA_FunArgList argvaluelist) =
                      VA_Bool True  -> return ()
                      VA_Bool False -> evalET envir' i >>= \val ->
                        throwError $ ValueOutOfBounds i range e val env
+                     _ -> error "unspecified"
                }) qbounds
          ; if length argnames == length argvaluelist
            then evalET envir' expr
            else throwError $ Default ("Function application "++
                                       "error (arg length missmatch).")
          }
+    _ -> error "unspecified"
   where mapLookup env keylist map e op kind =
           case keylist of
             [key] -> do{ case Map.lookup key map of
@@ -614,7 +618,7 @@ op_funapp i va argv@(VA_FunArgList argvaluelist) =
                                 Nothing ->
                                     throwError $ KeyNotFound env e key op kind
                        }
-            otherwise -> -- FIXME support list of arguments, foldl through
+            _ -> -- FIXME support list of arguments, foldl through
                 throwError $ Default ("ERROR: only one argument supported "
                                       ++ (prettyPrintVA $ VA_Seq keylist))
 op_funapp i va argv = throwError $ Default ("op_funapp i="++show i++
@@ -622,16 +626,16 @@ op_funapp i va argv = throwError $ Default ("op_funapp i="++show i++
                                             ", // argv="++prettyPrintVA argv)
 
 -- prefix
-op_subset i (VA_Set s) = let l   = Set.elems s
-                             pl  = powerset $ l
-                             pl' = map (\l -> VA_Set $ Set.fromList l) pl
+op_subset _i (VA_Set s) = let l   = Set.elems s
+                              pl  = powerset $ l
+                              pl' = map (\l -> VA_Set $ Set.fromList l) pl
                           in return $ VA_Set $ Set.fromList pl'
 op_subset i v = let (e, a) = i
                  in throwError $ IllegalType e a v TY_Set "prefix expression"
 
-op_domain i (VA_Seq l) =
+op_domain _i (VA_Seq l) =
     return $ VA_Set $ Set.fromList $ map (\i -> VA_Int i) [1 .. length l]
-op_domain i (VA_Map m) =
+op_domain _i (VA_Map m) =
     return $ VA_Set $ Set.fromList (Map.keys m)
 op_domain i v = let (e, a) = i
                  in throwError $ IllegalType e a v TY_Seq "prefix expression"
@@ -645,7 +649,7 @@ op_union i (VA_Set s) =
               do{ l <- foldM (\acc v ->
                     case v of
                       (VA_Set s') -> return $ acc ++ (elems s')
-                      otherwise ->
+                      _ ->
                         let (e, a) = i
                          in throwError $
                               IllegalType e a v TY_Set "UNION expression"
@@ -657,7 +661,7 @@ op_union i (VA_Set s) =
                     case v of
                       (VA_Seq [x,y]) ->
                         return (xacc++[x], yacc++[y])
-                      otherwise ->
+                      _ ->
                         let (e, a) = i
                          in throwError $
                               IllegalType e a v TY_Set "UNION expression"
@@ -671,15 +675,15 @@ op_union i (VA_Set s) =
 op_union i v = let (e, a) = i
                 in throwError $ IllegalType e a v TY_Set "UNION expression"
 
-op_not i (VA_Bool b) = return $ VA_Bool$ not b
+op_not _i (VA_Bool b) = return $ VA_Bool$ not b
 op_not i v = let (e, a) = i
               in throwError $ IllegalType e a v TY_Bool "negation expression"
 
 -- postfix
-op_prime i a = return a -- FIXME, noop for now
+op_prime _i a = return a -- FIXME, noop for now
 
 -- FIXME I should not need this, rewrite the AST
-op_closefunapp i a =  return a -- noop
+op_closefunapp _i a =  return a -- noop
 
 --
 evalOperator(env, argnames, exprargs, expr) =
@@ -701,16 +705,16 @@ enumElements :: Env -> AS_Expression -> AS_Expression -> ThrowsError [VA_Value]
 enumElements env pe e =
     do{ evalET env e >>= \v -> case v of
           VA_Set s -> return $ elems s
-          otherwise -> throwError $
+          _ -> throwError $
             IllegalType pe e v TY_Set "element enumeration"
       }
-    where enumRecTypeMap m = concat $
-            List.map (\k -> case Map.lookup k m of
-                         Just l ->
-                            List.map (\v -> VA_Rec $ Map.fromList [(k,v)]) l
-                       ) (Map.keys m)
-          enumVA :: VA_Value -> [VA_Value] -- FIXME move into class/VA_Value
-          enumVA (VA_Set s) = elems s
+    -- where enumRecTypeMap m = concat $
+    --         List.map (\k -> case Map.lookup k m of
+    --                      Just l ->
+    --                         List.map (\v -> VA_Rec $ Map.fromList [(k,v)]) l
+    --                    ) (Map.keys m)
+    --       enumVA :: VA_Value -> [VA_Value] -- FIXME move into class/VA_Value
+    --       enumVA (VA_Set s) = elems s
 
 list_bool :: AS_Expression -> Env
           -> ((VA_Value -> Bool) -> [VA_Value] -> Bool)
@@ -719,7 +723,7 @@ list_bool :: AS_Expression -> Env
 list_bool e env f exprs =
     do{ bvs <- mapM (\c -> evalET env c >>= \v -> case v of
                              (VA_Bool _) -> return v
-                             otherwise -> throwError $
+                             _ -> throwError $
                                IllegalType e c v TY_Bool "conditional"
                     ) exprs
       ; let b = f (\(VA_Bool b) -> b) bvs
@@ -763,13 +767,13 @@ instance Show EvalError where show = ppError
 ppError :: EvalError -> String
 ppError (Default s) = pp $ text s
 ppError (NoRuleError e) =
-    let pE = parentE e
-        pU = parentU e
-        pEdoc = case pE of
-                  Just pE' ->
-                      text "in expression at " <+>
-                      text (ppLocE pE') <//> text ":" <$> ppE pE'
-                  Nothing -> empty in
+    -- let pE = parentE e
+    --     pU = parentU e
+    --     pEdoc = case pE of
+    --               Just pE' ->
+    --                   text "in expression at " <+>
+    --                   text (ppLocE pE') <//> text ":" <$> ppE pE'
+    --               Nothing -> empty in
     pp $ nest 4 $ (text $ ppLocE e) <//> text ":" <$>
            (text "No rule to evaluate" <+> parens (ppE e))
 ppError (UnknownOperatorError s) = s
@@ -826,7 +830,7 @@ ppError (ChooseNoMatch i q expr values env) =
            <$> nest 4 (text "in context" -- FIXME only show free vars in expr
                        <$> vcat (map (\(id, v) ->
                                    (ppId id) <+> text "==>" <+> ppVA v) env))
-ppError (KeyNotFound env e idx map kind) =
+ppError (KeyNotFound _env e idx map kind) =
     pp $ nest 4 $ (text $ ppLocE e) <//> text ":"
            <$> text "key" <+> parens (ppVA idx) <+>
                text "not found in" <+> text kind
@@ -841,10 +845,10 @@ ppError (FunAppIllegalOperand e va argv) =
 ppError (RdBeforeWr e@(AS_Ident _info _quallist name)) =
     pp $ nest 4 $ (text $ ppLocE e) <//> text ":"
            <$> text "read of uninitialized variable" <+> text name
-
-instance Error EvalError where
-    noMsg = Default "An error has occured"
-    strMsg = Default
+ppError _ = error "unspecified"
+-- instance Error EvalError where
+--     noMsg = Default "An error has occured"
+--     strMsg = Default
 
 type ThrowsError = Either EvalError
 
@@ -855,8 +859,9 @@ pp d = showWidth 79 $ d
 
 trapError action = catchError action (return . show)
 
-extractValue :: ThrowsError a -> a
+extractValue :: HasCallStack => ThrowsError a -> a
 extractValue (Right val) = val
+extractValue (Left msg) = error $ show msg
 
 ------------------
 -- ENV HANDLING --
@@ -884,6 +889,7 @@ lookupBinding i env kind =
 
 toId :: AS_Expression -> Id
 toId (AS_Ident _info qual name) = (qual, name)
+toId _ = error "unspecified"
 
 ppId :: Id -> Doc
 ppId (quallist, name) =
@@ -923,7 +929,7 @@ mkIdent s = AS_Ident mkInfoE [] s
 mkInfoE = mkDummyInfo  "bif-no-location"
 
 bif_BOOLEAN :: Env -> ThrowsError VA_Value
-bif_BOOLEAN env =
+bif_BOOLEAN _env =
     return $ VA_Set $ Set.fromList [VA_Bool True, VA_Bool False]
 
 bif_Cardinality :: Env -> ThrowsError VA_Value

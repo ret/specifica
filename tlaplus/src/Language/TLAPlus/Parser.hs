@@ -47,17 +47,17 @@ dashSep = do{ p <- getPosition
             }
 
 specEnd :: TLAParser ()
-specEnd = do{ count 4 (char '=' <?> "specification end (====)")
+specEnd = do{ _ <- count 4 (char '=' <?> "specification end (====)")
             ; whiteSpace
             }
 
 headerSpec :: TLAParser String
-headerSpec = do{ dashSep
-           ; reserved "MODULE"
-           ; m <- identifier <?> "module name"
-           ; dashSep
-           ; return m
-           }
+headerSpec = do{ _ <- dashSep
+               ; reserved "MODULE"
+               ; m <- identifier <?> "module name"
+               ; _ <- dashSep
+               ;  return m
+               }
 
 extends :: TLAParser AS_ExtendDecl
 extends = do{ p <- getPosition
@@ -193,11 +193,11 @@ op_postfix op info e =
      in --Trace.trace ("=Post=> "++prettyPrintE res)
           res
 
-op_postfixIgnore :: AS_InfoE -> AS_Expression -> AS_Expression
-op_postfixIgnore _info e =
-    let res = e
-     in --Trace.trace ("=PostIgnore=> "++prettyPrintE res)
-          res
+-- op_postfixIgnore :: AS_InfoE -> AS_Expression -> AS_Expression
+-- op_postfixIgnore _info e =
+--     let res = e
+--      in --Trace.trace ("=PostIgnore=> "++prettyPrintE res)
+--           res
 
 op_infix :: AS_InfixOp -> AS_InfoE
          -> AS_Expression  -> AS_Expression -> AS_Expression
@@ -335,7 +335,7 @@ postfix name fun       = Postfix (do{ p <- getPosition
 
 basicExpr :: TLAParser AS_Expression
 basicExpr = choice $ basicExprListNoAngularClose ++
-            [ do{ char ']'
+            [ do{ _ <- char ']'
                 ; whiteSpace
                 ; return AS_CloseFunApp
                 } ]
@@ -364,7 +364,7 @@ basicExprListNoAngularClose =
         }
     , boolean
     , qualident
-    , do{ char '@'
+    , do{ _ <- char '@'
         ; whiteSpace
         ; return AS_OldVal
         }
@@ -440,7 +440,7 @@ squareExpr = squares $  choice [ -- use try to tell -> from |->
 
 squareExprStutter :: TLAParser AS_Expression -- left factor [...]_...
 squareExprStutter = do{ e <- squares expression
-                      ; char '_'
+                      ; _ <- char '_'
                       ; st <-    do{ p <- getPosition
                                    ; i <- identifier
                                    ; return $ mkIdent p [] i }
@@ -468,7 +468,7 @@ recordFunction = do{ p <- getPosition
                    }
 
 recordExceptDot :: TLAParser AS_ExceptNav
-recordExceptDot = do{ dot
+recordExceptDot = do{ _ <- dot
                     ; -- note, no whitespace allowed after dot
                     ; n <- identifier
                     ; return $ AS_ExceptNavField (AS_Field n)
@@ -481,10 +481,10 @@ recordExceptArr = do{ l <- squares $ commaSep expression
 
 recordExcept :: TLAParser AS_Expression
 recordExcept = do{ e <-     expression
-                        <|> do{ char '@'; whiteSpace; return AS_OldVal }
+                        <|> do{ _ <- char '@'; whiteSpace; return AS_OldVal }
                  ; reserved "EXCEPT" -- FIXME BOOK does not allow [x].y! REPORT
                  ; l <- commaSep $
-                   do{ char '!'
+                   do{ _ <- char '!'
                      ; l <- many1 $ recordExceptDot <|> recordExceptArr
                      ; reservedOp "="
                      ; val <- expression
@@ -735,38 +735,38 @@ lexer = lexer0{P.reservedOp = rOp}
           where
             lexer0      = P.makeTokenParser tladef
             resOp0      = P.reservedOp lexer0
-            resOp1 name = do string name -- \in
+            resOp1 name = do _ <- string name -- \in
                              notFollowedBy letter <?> ("end of " ++ show name)
-            resOp2 name = do string name -- \ (set difference)
+            resOp2 name = do _ <- string name -- \ (set difference)
                              notFollowedBy (letter <|> char '/') <?>
                                                ("end of " ++ show name)
-            resOp3 name = do string name -- \/ (or)
+            resOp3 name = do _ <- string name -- \/ (or)
                              return ()
             ------
-            resOp4 name = do string name -- ~>
+            resOp4 name = do _ <- string name -- ~>
                              return ()
-            resOp5 name = do char '~' -- ~ (not)
-                             return ()
+            resOp5 _name = do _ <- char '~' -- ~ (not)
+                              return ()
             ------
-            resOp6 name = do string name -- ==
+            resOp6 name = do _ <- string name -- ==
                              notFollowedBy (char '=' {-??-} <|> char '>') <?>
                                                ("end of " ++ show name)
-            resOp7 name = do string name -- =>
+            resOp7 name = do _ <- string name -- =>
                              return ()
-            resOp8 name = do string name -- =
+            resOp8 name = do _ <- string name -- =
                              notFollowedBy (char '=' <|> char '>') <?>
                                                ("end of " ++ show name)
             ------
-            resOpLT0 name = do string name -- <>
+            resOpLT0 name = do _ <- string name -- <>
                                notFollowedBy (char '>' {-??-} <|> char '=') <?>
                                                  ("end of " ++ show name)
-            resOpLT1 name = do string name -- <=
+            resOpLT1 name = do _ <- string name -- <=
                                return ()
-            resOpLT2 name = do string name -- <
+            resOpLT2 name = do _ <- string name -- <
                                notFollowedBy (char '=' <|> char '>') <?>
                                                  ("end of " ++ show name)
             ------
-            resOpAngular name = do string name -- []
+            resOpAngular name = do _ <- string name -- []
                                    notFollowedBy (char ']') <?>
                                                 ("end of " ++ show name)
             ------
@@ -800,7 +800,7 @@ lexer = lexer0{P.reservedOp = rOp}
                             "SUBSET" -> resOp1 name
                             "UNION" -> resOp1 name
                             _ -> resOp0 name
-            isAlphaOrUnderscore c = isAlpha c || c == '_'
+            -- isAlphaOrUnderscore c = isAlpha c || c == '_'
             lexeme p = do { x <- p; P.whiteSpace lexer0; return x }
 
 tladef = emptyDef {
@@ -874,17 +874,17 @@ dot             = P.dot lexer
 parens          = P.parens lexer
 braces          = P.braces lexer
 squares         = P.squares lexer
-semiSep         = P.semiSep lexer
-semiSep1        = P.semiSep1 lexer
+-- semiSep         = P.semiSep lexer
+-- semiSep1        = P.semiSep1 lexer
 commaSep        = P.commaSep lexer
 commaSep1       = P.commaSep1 lexer
-brackets        = P.brackets lexer
+-- brackets        = P.brackets lexer
 whiteSpace      = P.whiteSpace lexer
 symbol          = P.symbol lexer
 identifier      = P.identifier lexer
 reserved        = P.reserved lexer
 reservedOp      = P.reservedOp lexer
-integer         = P.integer lexer
+-- integer         = P.integer lexer
 natural         = P.natural lexer
-charLiteral     = P.charLiteral lexer
+-- charLiteral     = P.charLiteral lexer
 stringLiteral   = P.stringLiteral lexer

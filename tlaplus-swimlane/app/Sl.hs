@@ -1,4 +1,6 @@
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+module Main where
 
 import Control.Exception (catch, IOException)
 import Data.Maybe ( fromMaybe, fromJust ) -- for the getOpt package use
@@ -79,7 +81,6 @@ options =
   ,Option ['y']     ["yunit"]   (ReqArg YUnitMM "INT") "state (y) distance [mm]"
   ,Option ['z']     ["laneorder"]   (ReqArg LaneOrder "STRING") "specify lane ordering left to right (e.g. -zA,B,X,Y)"
   ]
-  where s = "                                             "
 
 outp :: Maybe String -> Flag
 outp = Output . fromMaybe "stdout"
@@ -151,9 +152,9 @@ config = unsafePerformIO $
                 yunit_mm = getYUnits flags }
   where getDensity :: [Flag] -> IO (DensityOption)
         getDensity [] = return All -- default is All
-        getDensity ((Density "all"):rest)     = return All
-        getDensity ((Density "compact"):rest) = return Compact
-        getDensity ((Density ups):rest)       =
+        getDensity ((Density "all"):_rest)     = return All
+        getDensity ((Density "compact"):_rest) = return Compact
+        getDensity ((Density ups):_rest)       =
             ioError (userError ("unknown density "++(show ups)++
                                 ", must be all or compact"))
         getDensity (_:rest) = getDensity rest
@@ -272,10 +273,11 @@ help = "Swimlane (sl) renders a TLC counterexample as a LaTeX/pstricks "++
 
 data PrintLevel = PNote | PWarning | PError
 say :: PrintLevel -> String -> IO ()
-say PNote s    | not $ verbose config = return ()
+say PNote _    | not $ verbose config = return ()
 say PNote s    |       verbose config = hPutStrLn stderr $ "[note] "++s
 say PWarning s                        = hPutStrLn stderr $ "[warning] "++s
 say PError s                          = hPutStrLn stderr $ "[error] "  ++s
+say _ _                               = error "undefined"
 
 note = say PNote
 warn = say PWarning
@@ -284,7 +286,7 @@ err s = do say PError s
 
 main :: IO ()
 main = do argv <- getArgs
-          (flags, files) <- getOptions argv
+          (flags, _files) <- getOptions argv
           if Prelude.elem Version flags
              then (do
                    putStrLn version
@@ -308,7 +310,7 @@ main = do argv <- getArgs
                        (do f <- readFile annfile
                            note $ "reading annotation file "++annfile
                            return f)
-                       (\(e::IOException) -> do
+                       (\(_e::IOException) -> do
                                  case annotationfile config of
                                    Nothing -> -- default annotation file
                                      note $ "no default annotation file "++
@@ -320,7 +322,7 @@ main = do argv <- getArgs
           let ann  = case anntext of
                        "" -> []
                        _  -> (listparser . alexScanTokens) anntext
-          let sl_config_key = configvar config
+          -- let _sl_config_key = configvar config
           let defaultMsgNotes = gen_msg_labels config
               defaultStateNotes = gen_state_labels config
 
@@ -346,7 +348,7 @@ main = do argv <- getArgs
                                 List.map (\((_,sl), (_,sl'), _) ->
                                   [sl,sl']) mel
                 suspectmel = Trace.trace ("Swimlanes = "++show playernames) $
-                    List.filter (\((i,sl), (i',sl'), deco) -> sl == sl') mel
+                    List.filter (\((_i,sl), (_i',sl'), _deco) -> sl == sl') mel
 
                 allstateidx' =
                   Prelude.map (\(_s, ievents) ->
@@ -354,7 +356,7 @@ main = do argv <- getArgs
                 allstateidx =
                   List.sort $ List.nub (concat allstateidx')
 
-                t_labeledtrace = []
+                -- t_labeledtrace = []
                 interactions = toInteractions mel
                 grid = playerGrid interactions
                 t_skeleton  = toSwimlanes states saf grid playernames
@@ -381,8 +383,9 @@ main = do argv <- getArgs
                         PsTricks ->
                           let annR = case ann of
                                        [] -> RecE Map.empty
-                                       [b] -> let (Bind sl_config_key recE) = b
+                                       [b] -> let (Bind _sl_config_key recE) = b
                                                in recE
+                                       _ -> error "unspecified"
                               snotes = mapannIS  "state_label_horizontal" annR
                               vnotes = mapannIS  "state_label_vertical" annR
                               arrowtips = mapannPIS "arrowtip_label" annR
@@ -415,7 +418,7 @@ main = do argv <- getArgs
                           Just f -> do note $ "Writing to file: " ++ f
                                        writeFile f content
                     let lines = List.map
-                         (\((i, sl), (i', sl'), deco) ->
+                         (\((i, sl), (i', _sl'), _deco) ->
                            sl++" "++show i++", "++
                            show i'++": "++ {-ppE m Map.empty-} show "foo")
                          suspectmel
@@ -426,8 +429,9 @@ main = do argv <- getArgs
                                  else err $ "message exchange on same "++
                                             "swimlane (-L ignores this error)."
                         else return ()
-          where nodelist [] acc      = List.nub acc
-                nodelist ((((i,_),(j,_),_),_):cme) acc = nodelist cme (i:j:acc)
+          where -- nodelist [] acc      = List.nub acc
+                -- nodelist ((((i,_),(j,_),_),_):cme) acc = nodelist cme (i:j:acc)
+                -- nodelist _ _ = error "undefined"
                 filterstates :: [MsgExchange] -> [Swimlane] -> [Swimlane]
                 filterstates mel lanes =
                     let idxs = concat $ List.map (\((i,sl),(i',sl'),_) ->
@@ -440,10 +444,10 @@ main = do argv <- getArgs
                                   nodes' = List.filter (\(i, EventGrp sl _) ->
                                              List.elem (i,sl) idxs) nodes
                                in (sl, nodes')
-                renumber :: LabeledTrace -> LabeledTrace
-                renumber lt =
-                    let t = List.map (\(i,egrp) -> egrp) lt
-                     in numberlist t
+                -- renumber :: LabeledTrace -> LabeledTrace
+                -- renumber lt =
+                --     let t = List.map (\(i,egrp) -> egrp) lt
+                --      in numberlist t
                 mapannIS :: String -> Expr -> (Map Int String)
                 mapannIS name (RecE ann) =
                     case Map.null ann of
@@ -455,7 +459,8 @@ main = do argv <- getArgs
                   where mapIS :: (Map Expr Expr) -> (Map Int String)
                         mapIS map_e =
                             let m'  = Map.mapKeys (\(IntE i) -> i) map_e
-                             in Map.mapWithKey (\k (StrE s) -> s) m'
+                             in Map.map (\(StrE s) -> s) m'
+                mapannIS _ _ = error "undefined"
                 mapannAbbrev :: String -> Expr -> (Map String String)
                 mapannAbbrev name (RecE ann) =
                     case Map.null ann of
@@ -467,7 +472,8 @@ main = do argv <- getArgs
                   where mapAB :: (Map Expr Expr) -> (Map String String)
                         mapAB map_e =
                             let m'  = Map.mapKeys (\(StrE i) -> i) map_e
-                             in Map.mapWithKey (\k (StrE s) -> s) m'
+                             in Map.map (\(StrE s) -> s) m'
+                mapannAbbrev _ _ = error "unspecified"
                 mapannPIS :: String -> Expr -> (Map (Int,Int) String)
                 mapannPIS name (RecE ann) =
                     case Map.null ann of
@@ -481,7 +487,8 @@ main = do argv <- getArgs
                             let m'  = Map.mapKeys
                                         (\(SeqE [(IntE i),(IntE j)]) -> (i,j))
                                         map_e
-                             in Map.mapWithKey (\k (StrE s) -> s) m'
+                             in Map.map (\(StrE s) -> s) m'
+                mapannPIS _ _ = error "undefined"
 
 runSl :: String -> Stmt
 runSl = parser . alexScanTokens
@@ -513,19 +520,21 @@ toTrace l = Prelude.map f l
   where f (RecE rec) = let AtomE sl    = rec!(Ident "swimlane")
                            SetE events = rec!(Ident "events")
                         in mkE sl events
+        f _ = error "unspecified"
 mkE :: String -> Set Expr -> EventGrp
 mkE swimlane exprset = EventGrp swimlane (Set.map f exprset)
    where f (RecE r) | Map.member (Ident "msg") r =
            case r!(Ident "msg") of
-             SeqE msg -> let StrE etype = r!(Ident "etype")
-                             SeqE tuple = r!(Ident "msg")
-                             RecE msg = head22 tuple
-                             SetE destset = (head22.tail) tuple
-                             dest = Set.map (\(AtomE d) -> d) destset
+             SeqE _msg -> let StrE etype = r!(Ident "etype")
+                              SeqE tuple = r!(Ident "msg")
+                              RecE msg = head tuple
+                              SetE destset = (head.tail) tuple
+                              dest = Set.map (\(AtomE d) -> d) destset
                           in MultiSendEvent r etype msg dest
-             RecE msg -> let StrE etype = r!(Ident "etype")
-                             RecE msg = r!(Ident "msg")
+             RecE _msg -> let StrE etype = r!(Ident "etype")
+                              RecE msg = r!(Ident "msg")
                           in SingleSendEvent r etype msg
+             _ -> error "unspecified"
          f (RecE r) | Map.member (Ident "msgs") r =
            let StrE etype = r!(Ident "etype")
                SetE msgsrece = r!(Ident "msgs")
@@ -534,11 +543,12 @@ mkE swimlane exprset = EventGrp swimlane (Set.map f exprset)
          f (RecE r) =
            let StrE etype = r!(Ident "etype")
             in NoMessageEvent r etype
+         f _ = error "unspecified"
 
 numberlist :: Trace -> LabeledTrace
 numberlist l           = numberlist0 (1::Int) l
   where numberlist0 i (h:rest) = (i, h):(numberlist0 (i+1) rest)
-        numberlist0 i []       = []
+        numberlist0 _ []       = []
 
 swimlanes :: LabeledTrace -> [Swimlane] -- left to right
 swimlanes labeledtrace = Prelude.map
@@ -570,7 +580,7 @@ to_pstricks_swimlanes saf cycle abbrev numlanes defaultNotes m notes vertnotes
             Abbrev -> Bool -> Int -> StateNotes -> StateNotes ->
             [String] -> [Int] -> Swimlane -> [String]
           to_pstricks_swimlanes0
-              saf cycle abbrev defaultNotes m notes vertnotes alllanes
+              saf cycle abbrev defaultNotes m _notes vertnotes alllanes
               allstateidx (name, ievents) =
             let Just xpos = case laneorder config of
                   Nothing -> List.elemIndex name alllanes
@@ -633,7 +643,7 @@ to_pstricks_swimlanes saf cycle abbrev numlanes defaultNotes m notes vertnotes
                                            (show i)++"}"]
                                   c = if (index == m-1) -- if,then draw box
                                       then let n = cycle
-                                               d = 0.5
+                                               d = (0.5 :: Double)
                                                xboxl = -d
                                                yboxl = fromIntegral ypos-d
                                                xboxu = fromIntegral
@@ -657,7 +667,7 @@ to_pstricks_swimlanes saf cycle abbrev numlanes defaultNotes m notes vertnotes
                                    False -> concat $ l++c)
                           ievents
                 symnodes = Prelude.map (\(i, _egrp) -> i) ievents
-                labels = label xpos (fromIntegral m-0.5) name
+                labels = label xpos (fromIntegral m-0.5 :: Double) name
              in nodes++(pairs vertnotes name symnodes)++labels
           stateAnnHor :: (Maybe StateAnnFun) -> Expr
                       -> (Bool, String, String) -- has-label, label, font
@@ -667,20 +677,22 @@ to_pstricks_swimlanes saf cycle abbrev numlanes defaultNotes m notes vertnotes
                 Just dl ->
                   let label = case List.find (\e -> case e of
                                                       (Label _) -> True
-                                                      otherwise -> False) dl of
+                                                      _         -> False) dl of
                                 Just (Label s) -> s
                                 Nothing -> ""
+                                _ -> error "unspecified"
                       lfont = case List.find (\e -> case e of
                                                       (LabelFont _) -> True
-                                                      otherwise -> False) dl of
+                                                      _ -> False) dl of
                                 Just (LabelFont f) -> f
                                 Nothing -> footnotesize "footnotesize"
+                                _ -> error "unspecified"
                    in (label /= "", label, lfont)
                 Nothing -> (False, "", "")
           pairs :: StateNotes -> String -> [Int] -> [String]
-          pairs vertnotes sli [i]    = []
+          pairs _vertnotes _sli [_i]    = []
           pairs vertnotes sli (i:is) =
-              let j = head22 is
+              let j = head is
                   l = "\\ncline[linewidth=3pt,"++"linecolor=lightgray]{"++
                       "-}{"++(ref i sli)++"}{"++(ref j sli)++"}"
                   note = case Map.lookup i vertnotes of
@@ -693,7 +705,7 @@ to_pstricks_swimlanes saf cycle abbrev numlanes defaultNotes m notes vertnotes
                     Just _  -> (l++t):(pairs vertnotes sli is)
           -- NOTE: needed when -Dcompact yields no msg exchanges (e.g. if
           -- patterns in sla file are not yet written)
-          pairs vertnotes sli [] = []
+          pairs _vertnotes _sli [] = []
           label xpos ypos name = ["\\rput[b]("++(show xpos)++","++(show ypos)++
                                  "){\\rnode{swimlane_"++(name)++
                                  "}{\\psframebox{\\"++(footnotesize "footnotesize")++" "++name++"}}}"]
@@ -705,17 +717,18 @@ to_pstricks_swimlanes saf cycle abbrev numlanes defaultNotes m notes vertnotes
               let [(NoMessageEvent map _)] = Set.toList eset -- FIXME rename Ty
                in RecE map
           defaultNote :: Abbrev -> String -> EventGrp -> (Bool, String, String)
-          defaultNote abbrev f (EventGrp _ eset) =
+          defaultNote _abbrev f (EventGrp _ eset) =
               let msgs = Set.fold
                            (\e acc ->
                              case Map.lookup (Ident f) (erec e) of
                                Nothing -> acc
-                               Just (StrE s) -> (protectS s):acc)
+                               Just (StrE s) -> (protectS s):acc
+                               _ -> error "unspecified")
                            [] eset
                in case msgs of
                     [] -> (False, "", "")
                     [""] -> (False, "", "")
-                    otherwise -> let s = join ", " msgs
+                    _ -> let s = join ", " msgs
                                   in (True, s, tiny)
           hasEv :: String -> EventGrp -> Bool
           hasEv et (EventGrp _ egrp) =
@@ -747,13 +760,13 @@ playerGrid l =
 to_pstricks_interactions ::
     Bool -> Int -> MsgNotes -> Abbrev -> [Int] ->
     [ColoredMessageExchange] -> [String]
-to_pstricks_interactions defaultNotes numy arrowtips
+to_pstricks_interactions _defaultNotes numy arrowtips
                          abbrev allstateidx l =
     Prelude.map
       (to_dot_message numy arrowtips abbrev (length l) allstateidx)
       l
-    where to_dot_message numy arrowtips abbrev
-                         m allstateidx (me, (color, style,
+    where to_dot_message numy _arrowtips abbrev
+                         _m allstateidx (me, (color, style,
                                              label, labelfont,
                                              tiplabel2, tiplabelfont)) =
               -- FIXME pruge all other Event types!!!
@@ -767,7 +780,7 @@ to_pstricks_interactions defaultNotes numy arrowtips
                                           show allstateidx) 0
                   ypos = numy-(index+1)
                   -- ypos = numy-j
-                  StrE typename = m!(Ident "type")
+                  StrE _typename = m!(Ident "type")
                   (hasTipLabel, tiplabel, tipSize) =
                       (tiplabel2 /= "", tiplabel2, footnotesize tiplabelfont)
                   success = case Map.member (Ident "success") m of
@@ -801,8 +814,8 @@ to_pstricks_interactions defaultNotes numy arrowtips
                   parboxMsg size s =
                       "\\parbox[t]{"++(show $ l_label_w_mm config)++"mm}"++
                       "{\\"++size++" "++s++"}"
-                  defaultMsgNote :: Message -> String
-                  defaultMsgNote m = protectS (ppRec (RecE m) abbrev)
+                  -- defaultMsgNote :: Message -> String
+                  -- defaultMsgNote m = protectS (ppRec (RecE m) abbrev)
 
 ref stateidx swimlanename = "ref"++show stateidx++swimlanename
 
@@ -825,6 +838,7 @@ to_pstricks_graph_open n m mnotes snotes issue =
                                 True -> (xunit_mm config + l_label_w_mm config)
                                 False -> 2 -- fluff
         xorigin = -left_comment_width
+        yorigin :: Double
         yorigin = -4 -- flubber
         xupper  = (xunit_mm config * (n-1)) + right_comment_width
         yupper  = (fromIntegral $ yunit_mm config)*(fromIntegral m-0.5)+
@@ -852,7 +866,7 @@ to_pstricks_graph_preamble _ _ =
 
 to_pstricks_graph_close :: [String] -> [String]
 to_pstricks_graph_close args =
-  let n = 3
+  let -- _n = 3
       psclosing =
           ["\\end{pspicture}"]
       cmdline = join " " args
@@ -869,7 +883,7 @@ protectS :: String -> String
 protectS = protectUS
 protectUS = List.map (\c -> case c of
                               '_' -> '-'
-                              otherwise -> c)
+                              _ -> c)
 
 toInteractions :: [MsgExchange] -> [ColoredMessageExchange]
 toInteractions mel = List.map convert mel
@@ -882,34 +896,40 @@ toInteractions mel = List.map convert mel
                   exchange = (mn, mn', msg)
                   color = case List.find (\e -> case e of
                                             (Color _) -> True
-                                            otherwise -> False) dl of
+                                            _ -> False) dl of
                             Just (Color c) -> c
                             Nothing -> "black"
+                            _ -> error "unspecified"
                   style = case List.find (\e -> case e of
                                             (Style _) -> True
-                                            otherwise -> False) dl of
+                                            _ -> False) dl of
                             Just (Style s) -> s
                             Nothing -> "solid"
+                            _ -> error "unspecified"
                   label = case List.find (\e -> case e of
                                             (Label _) -> True
-                                            otherwise -> False) dl of
+                                            _ -> False) dl of
                             Just (Label s) -> s
                             Nothing -> ""
+                            _ -> error "unspecified"
                   labelfont = case List.find (\e -> case e of
                                             (LabelFont _) -> True
-                                            otherwise -> False) dl of
+                                            _ -> False) dl of
                             Just (LabelFont s) -> s
                             Nothing -> ""
+                            _ -> error "unspecified"
                   tiplabel = case List.find (\e -> case e of
                                             (TipLabel _) -> True
-                                            otherwise -> False) dl of
+                                            _ -> False) dl of
                             Just (TipLabel s) -> s
                             Nothing -> ""
+                            _ -> error "unspecified"
                   tiplabelfont = case List.find (\e -> case e of
                                             (TipLabelFont _) -> True
-                                            otherwise -> False) dl of
+                                            _ -> False) dl of
                             Just (TipLabelFont s) -> s
                             Nothing -> ""
+                            _ -> error "unspecified"
                in (exchange, (color, style,
                               label, labelfont,
                               tiplabel, tiplabelfont))
@@ -919,16 +939,16 @@ toInteractions mel = List.map convert mel
                       let event = NoMessageEvent msgmap sl -- fake event
                        in (i, event)
 
-head2 [] = error "!2"
-head2 l = head l
-head22 [] = error "!22"
-head22 l = head l
+-- head2 [] = error "!2"
+-- head2 l = head l
+-- head22 [] = error "!22"
+-- head22 l = head l
 
 textToStates :: String -> (Maybe String, String, [State], Int)
 textToStates fc =
     let e = Regex.splitRegex (Regex.mkRegex "State ") fc
         issue = concat $ tail $ Regex.splitRegex (Regex.mkRegex "Error: ")
-                                                 (head22 e)
+                                                 (head e)
         stl = List.map (\s ->
                let lines2 = -- when Assertion is violated, trunc the line sect.
                      takeWhile (\l -> case l of
@@ -937,19 +957,21 @@ textToStates fc =
                                (lines s)
                    lines' = List.filter (/=[]) $ lines2 -- drop empty lines
                 in case lines' of
-                     [header, state] -> ([state], Nothing, 0) -- View used
-                     (header:statevars) | statevars /= [] -> -- No view
+                     [_header, state] -> ([state], Nothing, 0) -- View used
+                     (_header:statevars) | statevars /= [] -> -- No view
                         let ls = List.map (Regex.splitRegex
                                              (Regex.mkRegex " = "))
                                      statevars
                             exprs = List.foldl (\acc l ->
                                       case l of
                                         [_v,e] -> acc++","++e
-                                        [line1] -> acc++line1)
+                                        [line1] -> acc++line1
+                                        _ -> error "unspecified")
                                       [] ls
                             vars = List.map (\l -> case l of
                                                      [('/':'\\':' ':v), _e] ->
-                                                       v)
+                                                       v
+                                                     _ -> error "unspecified")
                                             ls
                          in (["<<"++exprs++">>"], Just vars, 0)
                      [other] -> -- Loop indication for temporal violation
@@ -962,10 +984,12 @@ textToStates fc =
                                           (fromJust $ List.elemIndex '.' b)
                                           b
                                b'' = read b'
-                            in ([], Nothing, a' - b'') )
+                            in ([], Nothing, a' - b'')
+                         _ -> error "unspecified"
+                     _ -> error "unspecified")
               $ tail e
         st = concat $ List.map (\(l, _, _) -> l) stl
-        (_, vars, _) = head22 stl -- all vars are the same
+        (_, vars, _) = head stl -- all vars are the same
         (_, _, cycle) = last stl
         (errtxt, names) = case vars of
           Just names -> (Nothing, names)
@@ -984,6 +1008,7 @@ textToStates fc =
                                      if n=="_"
                                        then []
                                        else [Bind (Ident n) v]) namevaluepairs
+                        _ -> error "unspecified"
               ) st
         states = zip [0 .. length st'-1] st'
      in (errtxt, issue, states, cycle)
@@ -999,10 +1024,10 @@ toSwimlanes states saf grid playernames =
     where convert :: Int -> (Maybe StateAnnFun) ->
                      PlayerGrid -> [String] -> (State, State, StateChange)
                   -> [Swimlane]
-          convert n saf grid playernames (s, s', sc) =
+          convert _n saf grid playernames (s, s', sc) =
               let (oldi, _) = s
                   (newi, _) = s'
-                  (i, dgl) = sc
+                  (i, _dgl) = sc
                   -- honor the -z list of players (and ordering) if present
                   -- if a statechange does not involve sending/receiving a
                   -- message, assume all players are involved since we cannot
@@ -1036,9 +1061,9 @@ toSwimlanes states saf grid playernames =
           stateToRec :: State -> Map Ident Expr
           stateToRec (_, statelist) = Map.fromList $
               List.map (\(Bind ident expr) -> (ident, expr)) statelist
-          idxsl :: [MsgExchange] -> [(Int, SwimlaneName)]
-          idxsl mel = let l = List.map (\(p,p',_) -> [p, p']) mel
-                       in concat l
+          -- idxsl :: [MsgExchange] -> [(Int, SwimlaneName)]
+          -- idxsl mel = let l = List.map (\(p,p',_) -> [p, p']) mel
+          --              in concat l
           groupSL :: [Swimlane] -> [Swimlane]
           groupSL sll =
               let allsl = List.nub $ List.map (\(sl, _) -> sl) sll
@@ -1046,7 +1071,7 @@ toSwimlanes states saf grid playernames =
              where filter :: SwimlaneName -> [Swimlane] -> Swimlane
                    filter slname sll =
                        let fl = List.filter (\(sl, _grp) -> sl == slname) sll
-                           grps = concat $ List.map (\(i, grpl) -> grpl) fl
+                           grps = concat $ List.map snd fl
                         in (slname, grps)
           diffdescr :: StateChange -> [DiffDescr]
           diffdescr (_i, sc) =
@@ -1058,13 +1083,15 @@ toSwimlanes states saf grid playernames =
                 Just dl ->
                   let look = case List.find (\e -> case e of
                                                       (Style _) -> True
-                                                      otherwise -> False) dl of
+                                                      _ -> False) dl of
                                 Just (Style s) -> s
                                 Nothing -> ""
+                                _ -> error "unspecified"
                       hdiff = case List.find (\e -> case e of
                                                       (HideDiff _) -> True
-                                                      otherwise -> False) dl of
+                                                      _ -> False) dl of
                                 Just (HideDiff sl) -> sl
                                 Nothing -> []
+                                _ -> error "unspecified"
                    in (look, hdiff)
                 Nothing -> ("", [])

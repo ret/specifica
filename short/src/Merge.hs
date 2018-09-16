@@ -11,21 +11,21 @@ merge :: [SH_Concern] -> SH_Concern
 merge concerns =
     let cels = concat $ map (\(SH_Concern _ _ l) -> l) concerns
         constants = filter isConstant cels
-	rolelists = filter isRolelist cels
-	interaction = mergeInteraction $ filter isInteraction cels
+        rolelists = filter isRolelist cels
+        interaction = mergeInteraction $ filter isInteraction cels
      in SH_Concern upos gen $ concat [constants, rolelists, [interaction]]
 
 mergeInteraction interactions =
     let l = concat $ map mergeInteraction0 interactions
         msgs = filter isMsg l
-	exts = filter isMsgExt l
-	roles = filter isRole l
-	verbs = filter isVerb l
-	displayAnn = filter isDisplayAnn l
-	names = roleNames roles
+        exts = filter isMsgExt l
+        roles = filter isRole l
+        verbs = filter isVerb l
+        displayAnn = filter isDisplayAnn l
+        names = roleNames roles
         roles' = nub $ [mergeRole n roles | n <- names]
-     in SH_Interaction upos gen True [] $ 
-	  concat [msgs, displayAnn, exts, verbs, roles']
+     in SH_Interaction upos gen True [] $
+          concat [msgs, displayAnn, exts, verbs, roles']
 
 mergeInteraction0 (SH_Interaction _ _ True {- enabled -} _roles l) = l
 mergeInteraction0 _ = []
@@ -73,13 +73,13 @@ isVerb (SH_VerbTLAOp _ _ _ _) = True
 isVerb _ = False
 
 roleNames :: [SH_InteractionElement] -> [String]
-roleNames l = concat $ map roleNames0 l 
+roleNames l = concat $ map roleNames0 l
   where roleNames0 (SH_RoleDef _ name _ _) = [name]
-	roleNames0 _ = []
+        roleNames0 _ = []
 
 ---- HELPER -------------------------------------------------------------------
 mkPos :: String -> Int -> Int -> PPos.SourcePos
 mkPos name line col = newPos name line col
 
-upos = mkPos "foo" 0 0 
+upos = mkPos "foo" 0 0
 epos = (upos, Nothing, Nothing)

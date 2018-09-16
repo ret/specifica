@@ -1,18 +1,19 @@
 {
+{-# OPTIONS_GHC -fno-warn-unused-matches #-}
 module Lexer (Token(..), AlexPosn(..), alexScanTokens, token_posn) where
 }
 
 %wrapper "posn"
 
-$digit = 0-9			-- digits
-$alpha = [a-zA-Z]		-- alphabetic characters
+$digit = 0-9                    -- digits
+$alpha = [a-zA-Z]               -- alphabetic characters
 
 tokens :-
 
-  $white+				;
-  $digit+				{ tok (\p s -> Int p (read s)) }
-  $alpha [$alpha $digit \_]*		{ tok (\p s -> Atom p s) }
-  \" (~\")* \"	                        { tok (\p s -> Str p (dropQuotes s)) }
+  $white+                               ;
+  $digit+                               { tok (\p s -> Int p (read s)) }
+  $alpha [$alpha $digit \_]*            { tok (\p s -> Atom p s) }
+  \" (~\")* \"                          { tok (\p s -> Str p (dropQuotes s)) }
   \=                                    { tok (\p s -> EQUAL p) }
   \[                                    { tok (\p s -> LAB p) }
   \]                                    { tok (\p s -> RAB p) }
@@ -39,8 +40,8 @@ tok f p s = f p s
 -- The token type:
 data Token =
     Int AlexPosn Int |
-    Atom AlexPosn String	|
-    Str AlexPosn String	|
+    Atom AlexPosn String |
+    Str AlexPosn String  |
     EQUAL AlexPosn |
     LAB AlexPosn |
     RAB AlexPosn |

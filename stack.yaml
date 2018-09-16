@@ -8,4 +8,6 @@ extra-deps:
 - Crypto-4.2.5.1
 - QuickCheck-2.11.3
 - dataenc-0.12
+- alex-3.1.7
+- happy-1.19.5
 resolver: lts-10.3

@@ -146,14 +146,14 @@ genSLAFile pname spec tla =
 \ \n\
 \ sf[transition \\in {}] ==\n\
 \   [label    |-> transition.diff,\n\
-\    hidediff |-> " ++ 
+\    hidediff |-> " ++
            "{}, \\* {" ++ commaSep (map show $ generatedStateFields tla) ++ "},\n" ++
            "    font     |-> fontsize]\n\
 \ \n\
 \ ASSUME [ messages |-> extract_msgs, state_transitions |-> sf]\n\
 \ ====\n"
       ce = extractColorAnn spec
-      se = extractStyleAnn spec 
+      se = extractStyleAnn spec
       s2' = " " ++ (prettyPrintUnit (rewriteAnn ce se (inlineOperatorDef s2)))
       s = s1 ++ s2' ++ "\n\n" ++ s3
   in writeFile (pname ++ ".sla") s
@@ -172,12 +172,12 @@ cupSep l = seperate " \\cup " l
 sendMC :: SH_FL_Spec -> [String] -- list of roles that send MC
 sendMC spec = nub $ concat $ map xtract $ msgDecl spec
   where xtract (SH_MsgDecl _ s r _ _) | isTypeSet r = typeKernel s
-				      | otherwise   = []
+                                      | otherwise   = []
 
 recvMC :: SH_FL_Spec -> [String] -- list of roles that recv MC
 recvMC spec = nub $ concat $ map xtract $ msgDecl spec
   where xtract (SH_MsgDecl _ _s r _ _) | isTypeSet r = typeKernel r
-				       | otherwise   = []
+                                       | otherwise   = []
 
 cup :: String -> [String] -> String
 cup template roles =
@@ -188,18 +188,18 @@ cup template roles =
 generatedStateFields :: AS_Spec -> [String]
 generatedStateFields tla = nub $ everything (++) ([] `mkQ` f) tla
   where f (AS_Ident _ _ name) | isPrefixOf "g_" name = [name]
-			      | otherwise        = []
-	f _ = []
+                              | otherwise        = []
+        f _ = []
 
 -- FIXME kramer@acm.org reto -- hack
 prettyPrintUnit :: AS_UnitDef -> String
 prettyPrintUnit u = showWidth 79 $ ppUnit u
-    where showWidth :: Int -> Doc -> String 
-	  showWidth w doc = displayS (renderPretty 0.9 w doc) ""
+    where showWidth :: Int -> Doc -> String
+          showWidth w doc = displayS (renderPretty 0.9 w doc) ""
 
 rewriteAnn :: AS_Expression -> AS_Expression -> AS_UnitDef -> AS_UnitDef
 rewriteAnn colorExpr styleExpr
-	   (AS_OperatorDef info h@(AS_OpHead (AS_Ident _ _ "mkMsgRec") _) e) = 
+           (AS_OperatorDef info h@(AS_OpHead (AS_Ident _ _ "mkMsgRec") _) e) =
     let e' = everywhere (mkT (f (colorExpr,styleExpr))) e
      in AS_OperatorDef info h e'
   where f :: (AS_Expression, AS_Expression) -> AS_Expression -> AS_Expression
@@ -211,70 +211,69 @@ rewriteAnn _ _ x = x
 -- FIXME kramer@acm.org reto -- code duplication
 extractColorAnn spec =
   let allMsgAnn = filter isMsgAnn $ extractAllDisplaySLs spec
-      allColor = concat $ map colorEntry allMsgAnn 
-      arms = map (\(mtype, (SH_ExprWrapper _ e)) -> 
-	             AS_CaseArm epos 
-	               (AS_InfixOP epos AS_EQ
-			(AS_InfixOP epos AS_DOT
-			 (mk_AS_Ident "msg")
-			 (mk_AS_Ident "type"))
-			(mk_AS_Ident $ show mtype))
-		       (rewriteNames mtype spec e)
-		 )
-	     allColor
+      allColor = concat $ map colorEntry allMsgAnn
+      arms = map (\(mtype, (SH_ExprWrapper _ e)) ->
+                     AS_CaseArm epos
+                       (AS_InfixOP epos AS_EQ
+                        (AS_InfixOP epos AS_DOT
+                         (mk_AS_Ident "msg")
+                         (mk_AS_Ident "type"))
+                        (mk_AS_Ident $ show mtype))
+                       (rewriteNames mtype spec e)
+                 )
+             allColor
       otherArm = AS_OtherCaseArm epos $ AS_StringLiteral epos defaultColor
    in AS_Case epos arms (Just otherArm)
   where isColor SH_SL_MsgAnnColor = True
-	isColor _ = False
-	colorEntry (SH_SL_MsgAnn mtype l) =
-	    concat $ map (\(k,e) -> if isColor k then [(mtype, e)] else []) l
+        isColor _ = False
+        colorEntry (SH_SL_MsgAnn mtype l) =
+            concat $ map (\(k,e) -> if isColor k then [(mtype, e)] else []) l
 
 -- FIXME kramer@acm.org reto -- code duplication
 extractStyleAnn spec =
   let allMsgAnn = filter isMsgAnn $ extractAllDisplaySLs spec
-      allStyle = concat $ map colorEntry allMsgAnn 
-      arms = map (\(mtype, (SH_ExprWrapper _ e)) -> 
-	             AS_CaseArm epos 
-	               (AS_InfixOP epos AS_EQ
-			(AS_InfixOP epos AS_DOT
-			 (mk_AS_Ident "msg")
-			 (mk_AS_Ident "type"))
-			(mk_AS_Ident $ show mtype))
-		       (rewriteNames mtype spec e)
-		 )
-	     allStyle
+      allStyle = concat $ map colorEntry allMsgAnn
+      arms = map (\(mtype, (SH_ExprWrapper _ e)) ->
+                     AS_CaseArm epos
+                       (AS_InfixOP epos AS_EQ
+                        (AS_InfixOP epos AS_DOT
+                         (mk_AS_Ident "msg")
+                         (mk_AS_Ident "type"))
+                        (mk_AS_Ident $ show mtype))
+                       (rewriteNames mtype spec e)
+                 )
+             allStyle
       otherArm = AS_OtherCaseArm epos $ AS_StringLiteral epos defaultStyle
    in AS_Case epos arms (Just otherArm)
   where isStyle SH_SL_MsgAnnStyle = True
-	isStyle _ = False
-	colorEntry (SH_SL_MsgAnn mtype l) =
-	    concat $ map (\(k,e) -> if isStyle k then [(mtype, e)] else []) l
+        isStyle _ = False
+        colorEntry (SH_SL_MsgAnn mtype l) =
+            concat $ map (\(k,e) -> if isStyle k then [(mtype, e)] else []) l
 
 isMsgAnn (SH_SL_MsgAnn _ _) = True
-isMsgAnn _ = False
 
 extractAllDisplaySLs :: SH_FL_Spec -> [SH_SL_Ann]
 extractAllDisplaySLs spec = (everything (++) ([] `mkQ` f)) spec
   where f (SH_DisplaySwimlane _ l) = l
-	f _ = []
+        f _ = []
 
 rewriteNames :: String -> SH_FL_Spec -> AS_Expression -> AS_Expression
 rewriteNames mtype spec e = everywhere (mkT (f mtype spec)) e
-  where f mtype spec i@(AS_Ident _ _ s) = 
-	    let fields = allFieldsOfMsg mtype (msgDecl spec)  
-	     in if elem s fields
-		then AS_InfixOP epos AS_DOT  -- protect field
-			 (mk_AS_Ident "msg") 
-			 i                   
-		else AS_StringLiteral epos s -- assume it's color or style name
-	f _ _ x = x
+  where f mtype spec i@(AS_Ident _ _ s) =
+            let fields = allFieldsOfMsg mtype (msgDecl spec)
+             in if elem s fields
+                then AS_InfixOP epos AS_DOT  -- protect field
+                         (mk_AS_Ident "msg")
+                         i
+                else AS_StringLiteral epos s -- assume it's color or style name
+        f _ _ x = x
 
 allFieldsOfMsg :: String -> [SH_MsgDecl] -> [String]
 allFieldsOfMsg mtype l = concat $ map (allFieldsOfMsg0 mtype) l
   where allFieldsOfMsg0 :: String -> SH_MsgDecl -> [String]
-	allFieldsOfMsg0 mtype (SH_MsgDecl _ _ _ t l) 
-	    | t == mtype = fieldNames l
-	    | otherwise = []
+        allFieldsOfMsg0 mtype (SH_MsgDecl _ _ _ t l)
+            | t == mtype = fieldNames l
+            | otherwise = []
         fieldNames l = let (_, names) = unzip l in names
 
 defaultColor = "black"
@@ -286,5 +285,5 @@ mk_AS_Ident s = AS_Ident epos [] s
 mkPos :: String -> Int -> Int -> PPos.SourcePos
 mkPos name line col = newPos name line col
 
-upos = mkPos "foo" 0 0 
+upos = mkPos "foo" 0 0
 epos = (upos, Nothing, Nothing)
