@@ -472,6 +472,9 @@ op_lteq i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
 op_gt _i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a > b
 op_gt i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
 
+op_gteq i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a >= b
+op_gteq i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
+
 op_subseteq _i (VA_Set a) (VA_Set b) = return $ VA_Bool $ Set.isSubsetOf a b
 op_subseteq i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 
