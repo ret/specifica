@@ -14,7 +14,7 @@ Follow these steps to install and invoke a simple sample application called `tle
 4. `cd specifica`
 5. `stack install`
 
-The [source for the tle sample](https://github.com/ret/specifica/blob/master/tlaplus-eval/src/tle.hs) is just 32 lines of code. Check it out!
+The [source for the tle sample](https://github.com/ret/specifica/blob/master/tlaplus-eval/app/tle.hs) is just 32 lines of code. Check it out!
 
 ## A Few Examples
 
