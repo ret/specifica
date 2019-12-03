@@ -29,5 +29,9 @@ library
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
+                     -fno-warn-missing-signatures
+                     -fno-warn-unused-matches
+                     -fno-warn-unused-imports
+
   extensions:        DeriveDataTypeable
                      FlexibleContexts

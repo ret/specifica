@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+# invoke with:
+#   ./run trivial
+
+# short trivial.short > trivial.tla
+
+java tlc2.TLC $* >fulltrace || true
+# drop the last 4 comment lines, 'sl' expects nothing past the last state entry
+# (n.b. 'sl' is OK with the pre-amble text lines in front of the ERROR and state lines)
+cat fulltrace | tail -r | sed '1,4d' | tail -r >trace
+
+./show trace

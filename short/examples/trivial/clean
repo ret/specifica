@@ -1,0 +1,2 @@
+#!/bin/bash -e
+rm -rf states/ trace fulltrace tmp.*

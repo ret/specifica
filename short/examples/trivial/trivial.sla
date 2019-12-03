@@ -48,7 +48,13 @@
  (* code gen !!! *)
  sent(states, pair) ==
    LET g_obuf_add == nonEmpty(
+          {<<pair, d(states[pair.next].state.st_Client[a].g_obuf,
+                     states[pair.curr].state.st_Client[a].g_obuf), a
+         >> : a \in Client }
 )       g_obuf_rem == nonEmpty(
+          {<<pair, d(states[pair.curr].state.st_Client[a].g_obuf,
+                     states[pair.next].state.st_Client[a].g_obuf), a
+         >> : a \in Client }
 )       inbox_add == nonEmpty(
                 {<<pair, mc(d(states[pair.next].state.st_Client[a].g_inbox,
                              states[pair.curr].state.st_Client[a].g_inbox)), a
@@ -111,10 +117,16 @@
          tiplabel |-> msg.type,
          font |-> fontsize,
          tipfont |-> fontsize,
-         color |-> CASE msg.type = "rd" -> "blue" [] 
-                        msg.type = "rdRes" -> "green" [] 
+         color |-> CASE msg.type = "prepare" -> "blue" [] 
+                        msg.type = "prepareAck" -> IF msg.locked
+                                                   THEN "green"
+                                                   ELSE "red" [] 
+                        msg.type = "release" -> "yellow" [] 
                         OTHER -> "black",
-         style |-> CASE OTHER -> "solid",
+         style |-> CASE msg.type = "prepareAck" -> IF msg.locked
+                                                   THEN "solid"
+                                                   ELSE "dashed" [] 
+                        OTHER -> "solid",
          from |-> [agent |-> s[3],state |-> s[2]],
          to |-> [agent |-> r[3],state |-> r[2]]]
    IN {mkMsg(s,r): r \in rSet}
@@ -129,7 +141,7 @@
  
  sf[transition \in {}] ==
    [label    |-> transition.diff,
-    hidediff |-> {}, \* {"g_pc_clientSeq", "g_view_Server", "g_inbox"},
+    hidediff |-> {}, \* {"g_obuf", "g_inbox", "g_view_Server", "g_pc_rdwr"},
     font     |-> fontsize]
  
  ASSUME [ messages |-> extract_msgs, state_transitions |-> sf]

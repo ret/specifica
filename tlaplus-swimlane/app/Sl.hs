@@ -2,27 +2,28 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Control.Exception (catch, IOException)
-import Data.Maybe ( fromMaybe, fromJust ) -- for the getOpt package use
-import Data.List as List
-import Data.Map  as Map hiding (splitAt)
-import Data.Set  as Set hiding (splitAt)
-import Debug.Trace as Trace
-import System.Console.GetOpt
-import GHC.Base  as Prelude hiding (join)
-import System.IO
-import Lexer (alexScanTokens)
-import Parser (Stmt(..), Ident(..), Expr(..), parser, listparser, exprparser)
-import System.IO.Unsafe (unsafePerformIO)
-import Text.Regex as Regex
+import           Control.Exception     (IOException, catch)
+import           Data.List             as List
+import           Data.Map              as Map hiding (splitAt)
+import           Data.Maybe            (fromJust, fromMaybe)
+import           Data.Set              as Set hiding (splitAt)
+import           Debug.Trace           as Trace
+import           GHC.Base              as Prelude hiding (join)
+import           Lexer                 (alexScanTokens)
+import           Parser                (Expr (..), Ident (..), Stmt (..),
+                                        exprparser, listparser, parser)
+import           System.Console.GetOpt
+import           System.IO
+import           System.IO.Unsafe      (unsafePerformIO)
+import           Text.Regex            as Regex
 
-import TraceReader
-import ExprHelper
+import           ExprHelper
+import           TraceReader
 
-import System.Environment
-import System.Exit
+import           System.Environment
+import           System.Exit
 
-import SLA (readSLA)
+import           SLA                   (readSLA)
 
 data Output = PsTricks
 outputformat = PsTricks
@@ -95,28 +96,28 @@ getOptions argv =
 
 data DensityOption = All | Compact deriving (Eq, Show)
 
-data Config = Config { verbose           :: Bool,
-                       fbox              :: Bool,
-                       blackandwhite     :: Bool,
-                       includefile       :: Bool,
-                       landscape         :: Bool,
-                       liberal           :: Bool,
-                       input             :: String,
-                       output            :: Maybe String,
-                       laneorder         :: Maybe [String],
-                       tlcview           :: Maybe [String],
-                       annotationfile    :: Maybe String,
-                       configvar         :: String,
-                       density           :: DensityOption,
-                       defaultnotefont   :: String,
-                       usernotefont      :: Maybe String,
-                       gen_msg_labels    :: Bool,
-                       gen_state_labels  :: Bool,
-                       l_label_w_mm      :: Int,
-                       r_label_w_mm      :: Int,
-                       xunit_mm          :: Int,
-                       yunit_mm          :: Int,
-                       slafile           :: Maybe String }
+data Config = Config { verbose          :: Bool,
+                       fbox             :: Bool,
+                       blackandwhite    :: Bool,
+                       includefile      :: Bool,
+                       landscape        :: Bool,
+                       liberal          :: Bool,
+                       input            :: String,
+                       output           :: Maybe String,
+                       laneorder        :: Maybe [String],
+                       tlcview          :: Maybe [String],
+                       annotationfile   :: Maybe String,
+                       configvar        :: String,
+                       density          :: DensityOption,
+                       defaultnotefont  :: String,
+                       usernotefont     :: Maybe String,
+                       gen_msg_labels   :: Bool,
+                       gen_state_labels :: Bool,
+                       l_label_w_mm     :: Int,
+                       r_label_w_mm     :: Int,
+                       xunit_mm         :: Int,
+                       yunit_mm         :: Int,
+                       slafile          :: Maybe String }
               deriving (Eq, Show)
 
 {-# NOINLINE config #-}
@@ -175,9 +176,9 @@ config = unsafePerformIO $
         getXUnits (_:rest)           = getXUnits rest
 
         getYUnits :: [Flag] -> Int
-        getYUnits []                  = 4
-        getYUnits (YUnitMM intstr:_)  = read intstr
-        getYUnits (_:rest)            = getYUnits rest
+        getYUnits []                 = 4
+        getYUnits (YUnitMM intstr:_) = read intstr
+        getYUnits (_:rest)           = getYUnits rest
 
         getLeftWidth :: [Flag] -> Int
         getLeftWidth []                   = 50
@@ -275,9 +276,9 @@ data PrintLevel = PNote | PWarning | PError
 say :: PrintLevel -> String -> IO ()
 say PNote _    | not $ verbose config = return ()
 say PNote s    |       verbose config = hPutStrLn stderr $ "[note] "++s
-say PWarning s                        = hPutStrLn stderr $ "[warning] "++s
-say PError s                          = hPutStrLn stderr $ "[error] "  ++s
-say _ _                               = error "undefined"
+say PWarning s = hPutStrLn stderr $ "[warning] "++s
+say PError s   = hPutStrLn stderr $ "[error] "  ++s
+say _ _        = error "undefined"
 
 note = say PNote
 warn = say PWarning
@@ -397,7 +398,7 @@ main = do argv <- getArgs
                                   snotes vnotes allstateidx skeleton
                               hasSaf = case saf of -- missing (Eq) on saf fun
                                          Nothing -> False
-                                         Just _ -> True
+                                         Just _  -> True
                            in
                            [to_pstricks_graph_open numlanes m
                               (True) -- FIXME check .sla file
@@ -679,11 +680,11 @@ to_pstricks_swimlanes saf cycle abbrev numlanes defaultNotes m notes vertnotes
                                                       (Label _) -> True
                                                       _         -> False) dl of
                                 Just (Label s) -> s
-                                Nothing -> ""
-                                _ -> error "unspecified"
+                                Nothing        -> ""
+                                _              -> error "unspecified"
                       lfont = case List.find (\e -> case e of
                                                       (LabelFont _) -> True
-                                                      _ -> False) dl of
+                                                      _             -> False) dl of
                                 Just (LabelFont f) -> f
                                 Nothing -> footnotesize "footnotesize"
                                 _ -> error "unspecified"
@@ -721,9 +722,9 @@ to_pstricks_swimlanes saf cycle abbrev numlanes defaultNotes m notes vertnotes
               let msgs = Set.fold
                            (\e acc ->
                              case Map.lookup (Ident f) (erec e) of
-                               Nothing -> acc
+                               Nothing       -> acc
                                Just (StrE s) -> (protectS s):acc
-                               _ -> error "unspecified")
+                               _             -> error "unspecified")
                            [] eset
                in case msgs of
                     [] -> (False, "", "")
@@ -734,7 +735,7 @@ to_pstricks_swimlanes saf cycle abbrev numlanes defaultNotes m notes vertnotes
           hasEv et (EventGrp _ egrp) =
               List.any (\ev -> case ev of
                                  (NoMessageEvent _ x) -> x == et
-                                 _ -> False)
+                                 _                    -> False)
                        (Set.toList egrp)
           erec :: Event -> OrigEventRecMap
           erec (NoMessageEvent  erec _)     = erec
@@ -825,7 +826,7 @@ tiny = defaultnotefont config
 footnotesize :: String -> String
 footnotesize s = case usernotefont config of
                    Nothing -> s
-                   Just f -> f
+                   Just f  -> f
 
 to_pstricks_graph_open :: Int -> Int -> Bool -> Bool -> String -> [String]
 to_pstricks_graph_open n m mnotes snotes issue =
@@ -846,7 +847,7 @@ to_pstricks_graph_open n m mnotes snotes issue =
         lscape = if landscape config then " ,landscape" else ""
         h = ["\\documentclass[10pt"++lscape++"]{article}",
              "\\usepackage{pstricks, pst-node}",
-             "\\usepackage[usenames]{color}",
+             -- "\\usepackage[usenames]{color}",
              "\\begin{document}",
              "\\begin{center}",
              "{\\footnotesize",
@@ -883,7 +884,7 @@ protectS :: String -> String
 protectS = protectUS
 protectUS = List.map (\c -> case c of
                               '_' -> '-'
-                              _ -> c)
+                              _   -> c)
 
 toInteractions :: [MsgExchange] -> [ColoredMessageExchange]
 toInteractions mel = List.map convert mel
@@ -896,40 +897,40 @@ toInteractions mel = List.map convert mel
                   exchange = (mn, mn', msg)
                   color = case List.find (\e -> case e of
                                             (Color _) -> True
-                                            _ -> False) dl of
+                                            _         -> False) dl of
                             Just (Color c) -> c
-                            Nothing -> "black"
-                            _ -> error "unspecified"
+                            Nothing        -> "black"
+                            _              -> error "unspecified"
                   style = case List.find (\e -> case e of
                                             (Style _) -> True
-                                            _ -> False) dl of
+                                            _         -> False) dl of
                             Just (Style s) -> s
-                            Nothing -> "solid"
-                            _ -> error "unspecified"
+                            Nothing        -> "solid"
+                            _              -> error "unspecified"
                   label = case List.find (\e -> case e of
                                             (Label _) -> True
-                                            _ -> False) dl of
+                                            _         -> False) dl of
                             Just (Label s) -> s
-                            Nothing -> ""
-                            _ -> error "unspecified"
+                            Nothing        -> ""
+                            _              -> error "unspecified"
                   labelfont = case List.find (\e -> case e of
                                             (LabelFont _) -> True
-                                            _ -> False) dl of
+                                            _             -> False) dl of
                             Just (LabelFont s) -> s
-                            Nothing -> ""
-                            _ -> error "unspecified"
+                            Nothing            -> ""
+                            _                  -> error "unspecified"
                   tiplabel = case List.find (\e -> case e of
                                             (TipLabel _) -> True
-                                            _ -> False) dl of
+                                            _            -> False) dl of
                             Just (TipLabel s) -> s
-                            Nothing -> ""
-                            _ -> error "unspecified"
+                            Nothing           -> ""
+                            _                 -> error "unspecified"
                   tiplabelfont = case List.find (\e -> case e of
                                             (TipLabelFont _) -> True
-                                            _ -> False) dl of
+                                            _                -> False) dl of
                             Just (TipLabelFont s) -> s
-                            Nothing -> ""
-                            _ -> error "unspecified"
+                            Nothing               -> ""
+                            _                     -> error "unspecified"
                in (exchange, (color, style,
                               label, labelfont,
                               tiplabel, tiplabelfont))
@@ -964,9 +965,9 @@ textToStates fc =
                                      statevars
                             exprs = List.foldl (\acc l ->
                                       case l of
-                                        [_v,e] -> acc++","++e
+                                        [_v,e]  -> acc++","++e
                                         [line1] -> acc++line1
-                                        _ -> error "unspecified")
+                                        _       -> error "unspecified")
                                       [] ls
                             vars = List.map (\l -> case l of
                                                      [('/':'\\':' ':v), _e] ->
@@ -1000,7 +1001,7 @@ textToStates fc =
                 -- FIXME kramer@acm.org reto -- handle case where no VIEW is
                 -- active in the .cfg file, i.e. if states are not tuples,
                 -- but are /\ rs = ... /\ cs = ...
-                let res = exprparser $ alexScanTokens state
+                let res = Trace.trace ("1111" ++ show state) $     exprparser $ alexScanTokens state
                  in case res of
                         SeqE values ->
                               let namevaluepairs = zip names values
@@ -1083,15 +1084,15 @@ toSwimlanes states saf grid playernames =
                 Just dl ->
                   let look = case List.find (\e -> case e of
                                                       (Style _) -> True
-                                                      _ -> False) dl of
+                                                      _         -> False) dl of
                                 Just (Style s) -> s
-                                Nothing -> ""
-                                _ -> error "unspecified"
+                                Nothing        -> ""
+                                _              -> error "unspecified"
                       hdiff = case List.find (\e -> case e of
                                                       (HideDiff _) -> True
-                                                      _ -> False) dl of
+                                                      _            -> False) dl of
                                 Just (HideDiff sl) -> sl
-                                Nothing -> []
-                                _ -> error "unspecified"
+                                Nothing            -> []
+                                _                  -> error "unspecified"
                    in (look, hdiff)
                 Nothing -> ("", [])

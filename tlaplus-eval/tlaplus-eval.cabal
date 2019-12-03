@@ -25,11 +25,18 @@ library
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
+                     -fno-warn-missing-signatures
+                     -fno-warn-unused-matches
+                     -fno-warn-unused-imports
+                     
   extensions:        FlexibleContexts, LambdaCase
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
-
+                     -fno-warn-missing-signatures
+                     -fno-warn-unused-matches
+                     -fno-warn-unused-imports
+                     
 executable           tli
   main-is:           tli.hs
   build-depends:     base, parsec >= 3.0.1, tlaplus, tlaplus-eval
@@ -38,6 +45,9 @@ executable           tli
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
+                     -fno-warn-missing-signatures
+                     -fno-warn-unused-matches
+                     -fno-warn-unused-imports
 
 executable           tle
   main-is:           tle.hs
@@ -47,3 +57,6 @@ executable           tle
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
+                     -fno-warn-missing-signatures
+                     -fno-warn-unused-matches
+                     -fno-warn-unused-imports

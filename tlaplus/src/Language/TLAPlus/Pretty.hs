@@ -4,13 +4,13 @@ module Language.TLAPlus.Pretty
     prettyPrintVA, ppVA, prettyPrintVATeX,
     prettyPrintCFG, ppCFG_Value) where
 
-import Prelude hiding ((<$>))
-import Data.List (find, elemIndex)
-import Data.Map as Map (foldrWithKey)
-import Data.Set as Set (elems)
-import Text.PrettyPrint.Leijen
+import           Data.List               (elemIndex, find)
+import           Data.Map                as Map (foldrWithKey)
+import           Data.Set                as Set (elems)
+import           Prelude                 hiding ((<$>))
+import           Text.PrettyPrint.Leijen
 
-import Language.TLAPlus.Syntax
+import           Language.TLAPlus.Syntax
 
 prettyPrintAS :: AS_Spec -> String
 prettyPrintAS spec =
@@ -86,7 +86,7 @@ ppE (AS_Choose _info b e) =
     text "CHOOSE" <+> align (ppQBound1 b <//> text ":" <+> align (ppE e))
 ppE (AS_Quantified _info kind bounds e) =
     let k = case kind of
-              AS_All -> text "\\A"
+              AS_All   -> text "\\A"
               AS_Exist -> text "\\E"
         b = cat (punctuate comma (map ppQBoundN bounds))
      in k <+> align (b <//> text ":" <+> ppE e)
@@ -225,10 +225,10 @@ protectE parent e = if prec e < prec parent
                     else group( ppE e )
 
 prec :: AS_Expression -> Int
-prec (AS_PrefixOP _info op _e) = prefixPrec op table
+prec (AS_PrefixOP _info op _e)  = prefixPrec op table
 prec (AS_PostfixOP _info op _e) = postfixPrec op table
 prec (AS_InfixOP _loc op _a _b) = let (p, _) = infixPrec op table in p
-prec _ = 999
+prec _                          = 999
 
 -- _assoc :: AS_Expression -> Assoc
 -- _assoc (AS_InfixOP _loc op _a _b) = let (_, a) = infixPrec op table in a
@@ -241,7 +241,7 @@ prefixPrec op t =
     where f :: AS_PrefixOp -> [Fix] -> Bool
           f op l = Nothing /= find (\f -> case f of
                                       Prefix _name theop -> theop == op
-                                      _ -> False) l
+                                      _                  -> False) l
 
 postfixPrec :: AS_PostfixOp -> PrecedenceTable -> Int
 postfixPrec op t =
@@ -251,7 +251,7 @@ postfixPrec op t =
     where f :: AS_PostfixOp -> [Fix] -> Bool
           f op l = Nothing /= find (\f -> case f of
                                       Postfix _name theop -> theop == op
-                                      _ -> False) l
+                                      _                   -> False) l
 
 infixPrec :: AS_InfixOp -> PrecedenceTable -> (Int, Assoc)
 infixPrec op t =
@@ -263,7 +263,7 @@ infixPrec op t =
     where f :: AS_InfixOp -> [Fix] -> Bool
           f op l = Nothing /= find (\f -> case f of
                                       Infix _name theop _a -> theop == op
-                                      _ -> False) l
+                                      _                    -> False) l
 
 {----------------------------------------------------------}
 {- KEEP THIS TABLE IN SYNC WITH THE MASTER COPY IN PARSER -}
@@ -436,7 +436,7 @@ ppVATeX (VA_FunArgList l) = brackets $ cat $ punctuate comma (map ppVATeX l)
 teX :: String -> String
 teX  = map (\c -> case c of
                     '_' -> '-'
-                    _ -> c)
+                    _   -> c)
 
 -------------------------------------------------------------------------------
 

@@ -738,7 +738,8 @@ ClientState ==
 ServerState ==
   [cvalue: BOOLEAN,g_inbox: Seq(Msg)] 
 ---- 
-TypeInvariant ==
+TypeInvariant == TRUE
+TypeInvariant2 ==
   /\ (st_Client \in [Client -> ClientState]) /\ (st_Server \in [Server -> ServerState]) 
 Init ==
   /\ (st_Client = [client \in Client |-> [g_pc_clientSeq |-> 0,g_view_Server |-> init_Server,g_inbox |-> <<>>]]) /\ (st_Server = [server \in Server |-> [cvalue |-> FALSE,g_inbox |-> <<>>]]) 
