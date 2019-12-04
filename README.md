@@ -1,4 +1,4 @@
-# Specifica [![Build Status](https://github.com/ret/specifica/workflows/Haskell%20Stack%20Project%20CI/badge.svg)](https://github.com/ret/specifica/workflows/Haskell%20Stack%20Project%20CI/badge.svg)
+# Specifica [![Build Status](https://github.com/ret/specifica/workflows/Haskell%20Stack%20Project%20CI/badge.svg)](https://github.com/ret/specifica/actions)
 
 Specifica is a collection of TLA+ related Haskell libraries comprising a tlaplus parser, pretty printer, and expression evaluator. The code here is meant to serve as a starting point for developers who wish to build small TLA+ related utilities quickly.
 
