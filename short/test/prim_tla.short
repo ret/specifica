@@ -1,7 +1,0 @@
-PROTOCOL P {
-  INTERACTION I() {
-    TLA { foo == bar }
-    ROLE R() {
-    }
-  }
-}

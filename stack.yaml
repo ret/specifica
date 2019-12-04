@@ -1,11 +1,12 @@
-flags: {}
+resolver: lts-10.3
+
 packages:
-- short/
 - tlaplus/
 - tlaplus-eval/
-- tlaplus-swimlane/
+
 extra-deps:
 - Crypto-4.2.5.1
 - QuickCheck-2.11.3
 - dataenc-0.12
-resolver: lts-10.3
+
+flags: {}

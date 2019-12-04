@@ -1,7 +1,0 @@
-#/bin/bash -e
-sl $* >tmp.tex
-pslatex tmp.tex
-dvips -o tmp.ps tmp.dvi
-pstopdf tmp.ps
-open tmp.pdf
-

@@ -1,1 +1,0 @@
-./pstricks $1 -t boxwood2.sla -s -dall -p 50 -q 50 -y 10 -u tiny -f tiny -w st_Machine,st_Observer,st_Client -zM1,O1,C1,Z1

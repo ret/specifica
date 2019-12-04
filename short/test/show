@@ -1,1 +1,0 @@
-./pstricks $1 -t replication.sla -s -dall -p 50 -q 50 -y 10 -u tiny -f tiny -w st_Client,st_Replica -zX,A,B,Y

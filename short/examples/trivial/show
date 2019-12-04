@@ -1,1 +1,0 @@
-./pstricks $1 -t lu.sla -s -m -dcompact -p 50 -q 50 -y 10 -u tiny -f tiny -wst_Client,st_Server -zX,A,B,Y
