@@ -399,7 +399,8 @@ infix_op_table ::
 infix_op_table =
   [ (AS_Plus, (op_plus)), (AS_Minus, (op_minus)),
     (AS_Mult, (op_mult))
-  , (AS_Cup, (op_cup)), (AS_Cap, (op_cap))
+  , (AS_Cup, (op_cup)), (AS_Union, (op_cup))
+  , (AS_Cap, (op_cap)), (AS_Intersect, (op_cap))
   , (AS_EQ, (op_eq)), (AS_NEQ, (op_neq)), (AS_LT, (op_lt)),
     (AS_LTEQ, (op_lteq)), (AS_GTEQ, (op_gteq)), (AS_GT, (op_gt))
   , (AS_COLONGT, (op_colongt)), (AS_ATAT, (op_atat))

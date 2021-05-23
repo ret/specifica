@@ -202,7 +202,9 @@ ppInfixOP AS_LTEQ        = text "<="
 ppInfixOP AS_GTEQ        = text ">="
 ppInfixOP AS_SubsetEq    = text "\\subseteq"
 ppInfixOP AS_Cup         = text "\\cup"
+ppInfixOP AS_Union       = text "\\union"
 ppInfixOP AS_Cap         = text "\\cap"
+ppInfixOP AS_Intersect   = text "\\intersect"
 ppInfixOP AS_SetMinus    = text "\\"
 ppInfixOP AS_In          = text "\\in"
 ppInfixOP AS_Circ        = text "\\o"
@@ -289,7 +291,9 @@ table =
     ,{- 9/ 9-}[binary ".."         (op_infix  AS_DOTDOT)   AssocNone
               ,prefix "DOMAIN"     (op_prefix AS_DOMAIN) ]
     ,{- 8/ 8-}[binary "\\cup"      (op_infix  AS_Cup)      AssocLeft
+              ,binary "\\union"    (op_infix  AS_Union)    AssocLeft
               ,binary "\\cap"      (op_infix  AS_Cap)      AssocLeft
+              ,binary "\\intersect"(op_infix  AS_Intersect)AssocLeft
               ,binary "\\"         (op_infix  AS_SetMinus) AssocNone
               ,prefix "SUBSET"     (op_prefix AS_SUBSET)
               ,prefix "UNION"      (op_prefix AS_UNION) ]

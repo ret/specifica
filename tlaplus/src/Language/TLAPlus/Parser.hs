@@ -14,20 +14,21 @@ module Language.TLAPlus.Parser
      expression, operatorDef) -- for use in australis
 where
 
-import Data.Char (isAlpha)
-import Debug.Trace as Trace
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Expr
-import Text.ParserCombinators.Parsec.Language( emptyDef )
-import Text.ParserCombinators.Parsec.Pos(SourcePos)
-import qualified Text.ParserCombinators.Parsec.Token as P
-import Data.List (nub, (\\))
-import Data.Set as Set (fromList)
+import           Data.Char                              (isAlpha)
+import           Data.List                              (nub, (\\))
+import           Data.Set                               as Set (fromList)
+import           Debug.Trace                            as Trace
+import           Text.ParserCombinators.Parsec
+import           Text.ParserCombinators.Parsec.Expr
+import           Text.ParserCombinators.Parsec.Language (emptyDef)
+import           Text.ParserCombinators.Parsec.Pos      (SourcePos)
+import qualified Text.ParserCombinators.Parsec.Token    as P
 
-import Language.TLAPlus.ParserState
-    (TLAParser, PState, mkState, pushIndent, popIndent)
-import Language.TLAPlus.Syntax
-import Language.TLAPlus.Pretty (prettyPrintE)
+import           Language.TLAPlus.ParserState           (PState, TLAParser,
+                                                         mkState, popIndent,
+                                                         pushIndent)
+import           Language.TLAPlus.Pretty                (prettyPrintE)
+import           Language.TLAPlus.Syntax
 
 tlaspec :: TLAParser AS_Spec
 tlaspec = do { whiteSpace
@@ -290,7 +291,9 @@ table =
     ,{- 9/ 9-}[binary ".."         (op_infix  AS_DOTDOT)   AssocNone
               ,prefix "DOMAIN"     (op_prefix AS_DOMAIN) ]
     ,{- 8/ 8-}[binary "\\cup"      (op_infix  AS_Cup)      AssocLeft
+              ,binary "\\union"    (op_infix  AS_Union)    AssocLeft
               ,binary "\\cap"      (op_infix  AS_Cap)      AssocLeft
+              ,binary "\\intersect"(op_infix  AS_Intersect)AssocLeft
               ,binary "\\"         (op_infix  AS_SetMinus) AssocNone
               ,prefix "SUBSET"     (op_prefix AS_SUBSET)
               ,prefix "UNION"      (op_prefix AS_UNION) ]

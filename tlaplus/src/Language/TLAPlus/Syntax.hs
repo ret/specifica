@@ -1,17 +1,17 @@
 module Language.TLAPlus.Syntax where
 
-import Data.Map as Map hiding (map)
-import Data.Set as Set hiding (map)
-import Data.Generics
+import           Data.Generics
+import           Data.Map                          as Map hiding (map)
+import           Data.Set                          as Set hiding (map)
 
-import Text.ParserCombinators.Parsec.Pos as PPos
+import           Text.ParserCombinators.Parsec.Pos as PPos
 
 type AS_InfoE = (PPos.SourcePos, Maybe AS_UnitDef, Maybe AS_Expression)
 type AS_InfoU = PPos.SourcePos
 
-data AS_Spec = AS_Spec {name :: String,
-                        extendDecl   :: AS_ExtendDecl,
-                        unitDef      :: [AS_UnitDef]}
+data AS_Spec = AS_Spec {name       :: String,
+                        extendDecl :: AS_ExtendDecl,
+                        unitDef    :: [AS_UnitDef]}
                deriving (Eq, Ord, Show, Data, Typeable)
 data AS_ExtendDecl = AS_ExtendDecl PPos.SourcePos [String]
                      deriving (Eq, Ord, Show, Data, Typeable)
@@ -117,8 +117,10 @@ data AS_InfixOp = AS_EQ
                 | AS_LTEQ
                 | AS_GTEQ
                 | AS_SubsetEq
-                | AS_Cup
+                | AS_Cup       -- page 273, \cup or \union
+                | AS_Union
                 | AS_Cap
+                | AS_Intersect -- page 273, \cap or \intersect
                 | AS_SetMinus
                 | AS_In
                 | AS_Circ
@@ -199,12 +201,12 @@ mkDummyInfo s  = (PPos.newPos s 0 0, Nothing, Nothing)
 
 infoU :: AS_UnitDef -> AS_InfoU
 infoU (AS_FunctionDef info _ _ _) = info
-infoU (AS_OperatorDef info _ _) = info
-infoU (AS_Assume info _) = info
-infoU (AS_Theorem info _) = info
-infoU (AS_ConstantDecl info _) = info
-infoU (AS_VariableDecl info _) = info
-infoU (AS_Separator info) = info
+infoU (AS_OperatorDef info _ _)   = info
+infoU (AS_Assume info _)          = info
+infoU (AS_Theorem info _)         = info
+infoU (AS_ConstantDecl info _)    = info
+infoU (AS_VariableDecl info _)    = info
+infoU (AS_Separator info)         = info
 
 -------------------------------------------------------------------------------
 
@@ -241,7 +243,7 @@ cfg_constants (CFG_Config _name stmts) =
              (CFG_ConstantDef _info l) -> concat $
                 map (\centry -> case centry of
                        (CFG_Assignment _info ident value) -> [(ident, value)]
-                       _ -> []) l
+                       _                                  -> []) l
              _ -> []
           ) stmts
 
@@ -279,37 +281,37 @@ data TY_Type = TY_Map | TY_Rec | TY_Set | TY_Seq |
                deriving (Eq, Ord, Show, Data, Typeable)
 
 typeOf :: VA_Value -> TY_Type
-typeOf (VA_Map _) = TY_Map
-typeOf (VA_Rec _) = TY_Rec
-typeOf (VA_Set _) = TY_Set
-typeOf (VA_Seq _) = TY_Seq
-typeOf (VA_Int _) = TY_Int
-typeOf (VA_Bool _) = TY_Bool
-typeOf (VA_String _) = TY_String
-typeOf (VA_Char _) = TY_Char
-typeOf (VA_Atom _) = TY_Atom
+typeOf (VA_Map _)               = TY_Map
+typeOf (VA_Rec _)               = TY_Rec
+typeOf (VA_Set _)               = TY_Set
+typeOf (VA_Seq _)               = TY_Seq
+typeOf (VA_Int _)               = TY_Int
+typeOf (VA_Bool _)              = TY_Bool
+typeOf (VA_String _)            = TY_String
+typeOf (VA_Char _)              = TY_Char
+typeOf (VA_Atom _)              = TY_Atom
 typeOf (VA_FunctionDef _ _ _ _) = TY_Fun
-typeOf (VA_OperatorDef _ _ _) = TY_Op
-typeOf (VA_FunType _ _) = TY_FunType
-typeOf (VA_RecType _) = TY_RecType
-typeOf (VA_SeqType _) = TY_SeqType
-typeOf (VA_Var _) = TY_Var
-typeOf (VA_FunArgList _) = TY_FunArgList
+typeOf (VA_OperatorDef _ _ _)   = TY_Op
+typeOf (VA_FunType _ _)         = TY_FunType
+typeOf (VA_RecType _)           = TY_RecType
+typeOf (VA_SeqType _)           = TY_SeqType
+typeOf (VA_Var _)               = TY_Var
+typeOf (VA_FunArgList _)        = TY_FunArgList
 
 ppTY :: TY_Type -> String
-ppTY TY_Map = "Map"
-ppTY TY_Rec = "Rec"
-ppTY TY_Set = "Set"
-ppTY TY_Seq = "Seq"
-ppTY TY_Int = "Int"
-ppTY TY_Bool = "Bool"
-ppTY TY_String = "String"
-ppTY TY_Char = "Char"
-ppTY TY_Atom = "Atom"
-ppTY TY_Fun = "Fun"
-ppTY TY_Op = "Op"
-ppTY TY_FunType = "FunType"
-ppTY TY_RecType = "RecType"
-ppTY TY_SeqType = "SeqType"
-ppTY TY_Var = "Variable"
+ppTY TY_Map        = "Map"
+ppTY TY_Rec        = "Rec"
+ppTY TY_Set        = "Set"
+ppTY TY_Seq        = "Seq"
+ppTY TY_Int        = "Int"
+ppTY TY_Bool       = "Bool"
+ppTY TY_String     = "String"
+ppTY TY_Char       = "Char"
+ppTY TY_Atom       = "Atom"
+ppTY TY_Fun        = "Fun"
+ppTY TY_Op         = "Op"
+ppTY TY_FunType    = "FunType"
+ppTY TY_RecType    = "RecType"
+ppTY TY_SeqType    = "SeqType"
+ppTY TY_Var        = "Variable"
 ppTY TY_FunArgList = "FunArgListType"
