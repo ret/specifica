@@ -1,7 +1,7 @@
 name:                tlaplus
 version:             0.1
 
-license:             BSD3
+license:             MIT
 license-file:        LICENSE
 
 author:              Reto Kramer <kramer@acm.org>
