@@ -563,7 +563,17 @@ op_dot i va@(VA_RecType a) vb@(VA_String _) = -- does TLA+ even allow this?
 op_dot _i va vb = throwError $
     Default ("Cannot apply (.) value "++show vb++" to subject "++show va)
 
-op_times _i a b = return $ VA_Seq $ [a,b] -- tuples are seq of 2 elements
+op_times _i (VA_Set a) (VA_Set b) =
+  let pairs = [ VA_Seq [ea, eb] | ea <- Set.elems a, eb <- Set.elems b] in
+  return $ VA_Set $ Set.fromList pairs
+op_times i a b =
+  -- Note: book page 268, can \X operate on Seq in addition to Set?
+  -- No. Empirically tried to use Seq and TLC says:
+  --   ... Attempted to enumerate a set of the form s1 \X s2 ... \X sn,
+  --       but can't enumerate s0:
+  --       <<1, 2>>
+  -- For now, we require Sets.
+  throwError $ TypeMissmatch i a b [TY_Set]
 
 op_and _i (VA_Bool a) (VA_Bool b) = return $ VA_Bool (a && b)
 op_and i va vb = throwError $ TypeMissmatch i va vb [TY_Bool]
