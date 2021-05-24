@@ -480,7 +480,7 @@ op_subseteq _i (VA_Set a) (VA_Set b) = return $ VA_Bool $ Set.isSubsetOf a b
 op_subseteq i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 
 op_setminus _i (VA_Set a) (VA_Set b) = return $ VA_Set $ a \\ b
-op_setminus i va vb = throwError $ TypeMissmatch i va vb [TY_Int]
+op_setminus i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 
 -- FIXME see book, p. 264
 op_in i va (VA_Set s) =
