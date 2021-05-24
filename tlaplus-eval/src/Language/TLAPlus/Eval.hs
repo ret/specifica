@@ -589,13 +589,13 @@ op_funapp i va argv@(VA_FunArgList argvaluelist) =
     (VA_Rec map) -> mapLookup env argvaluelist map e va "record"
     (VA_Set _) -> throwError $ FunAppIllegalOperand e va argv
     (VA_Seq l) -> let map = Map.fromList $ List.map (\(i,v) -> (VA_Int i, v))
-                                                    (zip [1..length l] l)
+                                                    (zip [1 .. (toInteger $ length l)] l)
                    in mapLookup env argvaluelist map e va "sequence"
     (VA_Int _) -> throwError $ FunAppIllegalOperand e va argv
     (VA_Bool _) -> throwError $ FunAppIllegalOperand e va argv
     (VA_String l) ->
        let map = Map.fromList $ List.map (\(i,v) -> (VA_Int i, VA_Char v))
-                                         (zip [1..length l] l)
+                                         (zip [1..(toInteger $ length l)] l)
         in mapLookup env argvaluelist map e va "String"
     (VA_Char _) -> throwError $ FunAppIllegalOperand e va argv
     (VA_Atom _) -> throwError $ FunAppIllegalOperand e va argv
@@ -648,7 +648,7 @@ op_subset i v = let (e, a) = i
                  in throwError $ IllegalType e a v TY_Set "prefix expression"
 
 op_domain _i (VA_Seq l) =
-    return $ VA_Set $ Set.fromList $ map (\i -> VA_Int i) [1 .. length l]
+    return $ VA_Set $ Set.fromList $ map (\i -> VA_Int i) [1 .. (toInteger $ length l)]
 op_domain _i (VA_Map m) =
     return $ VA_Set $ Set.fromList (Map.keys m)
 op_domain i v = let (e, a) = i
@@ -949,7 +949,7 @@ bif_BOOLEAN _env =
 bif_Cardinality :: Env -> ThrowsError VA_Value
 bif_Cardinality env =
     bifArg env "S" >>= \v -> case v of
-      (VA_Set s) -> return $ VA_Int $ Set.size s
+      (VA_Set s) -> return $ VA_Int $ toInteger (Set.size s)
       other  -> throwError $
         Default ("BIF Cardinality - wrong type of argument "++show other)
 

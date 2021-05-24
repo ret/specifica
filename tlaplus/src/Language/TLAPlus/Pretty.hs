@@ -109,7 +109,7 @@ ppE (AS_LOR _pos le) =
     let lt = map (\e -> text "\\/" <+> ppE e) le
      in align $ vsep lt
 
-ppE (AS_Num _info n) = int n
+ppE (AS_Num _info n) = integer n
 ppE (AS_Bool _info b) = text $ if b then "TRUE" else "FALSE"
 ppE (AS_StringLiteral _info s) = dquotes $ text s
 ppE (AS_RecordType _info l) =
@@ -368,7 +368,7 @@ ppVA (VA_Seq l) =
     group( text "<<" <//>
            align (cat (punctuate comma $ map (group . ppVA) l)) <//>
            text ">>")
-ppVA (VA_Int i) = int i
+ppVA (VA_Int i) = integer i
 ppVA (VA_Bool b) = if b then text "TRUE" else text "FALSE"
 ppVA (VA_String s) = dquotes $ text s
 ppVA (VA_Char c) = char '\'' <//> char c <//> char '\''
@@ -417,7 +417,7 @@ ppVATeX (VA_Seq l) =
     text "$\\ll$" <//>
     align (hcat (punctuate (comma <//> space) $ map ppVATeX l)) <//>
     text "$\\gg$"
-ppVATeX (VA_Int i) = int i
+ppVATeX (VA_Int i) = integer i
 ppVATeX (VA_Bool b) = if b then text "TRUE" else text "FALSE"
 ppVATeX (VA_String s) = text "{\\tt \"" <//> text (teX s) <//> text "\"}"
 ppVATeX (VA_Char c) = char '\'' <//> char c <//> char '\''
@@ -482,7 +482,7 @@ ppCFG_Ident (CFG_Ident _info s) = text s
 ppCFG_Value :: CFG_Value -> Doc
 ppCFG_Value (CFG_Atom _info s) = text s
 ppCFG_Value (CFG_Bool _info b) = if b then text "TRUE" else text "FALSE"
-ppCFG_Value (CFG_Int _info i) = int i
+ppCFG_Value (CFG_Int _info i) = integer i
 ppCFG_Value (CFG_StringLiteral _info s) = dquotes $ text s
 ppCFG_Value (CFG_Set _info s) =
     let l = Set.elems s

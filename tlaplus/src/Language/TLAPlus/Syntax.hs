@@ -51,7 +51,7 @@ data AS_Expression =
       | AS_Tuple AS_InfoE [AS_Expression]
       | AS_LAND AS_InfoE [AS_Expression]
       | AS_LOR AS_InfoE [AS_Expression]
-      | AS_Num AS_InfoE Int
+      | AS_Num AS_InfoE Integer
       | AS_Bool AS_InfoE Bool
       | AS_StringLiteral AS_InfoE String
       | AS_RecordType AS_InfoE [AS_RecordElementType]
@@ -222,7 +222,7 @@ data CFG_Statement = CFG_ConstantDef CFG_Info [CFG_ConstantEntry]
 
 data CFG_Value = CFG_Atom CFG_Info String    -- translates to VA_Atom
                | CFG_Bool CFG_Info Bool                    -- VA_Bool
-               | CFG_Int CFG_Info Int                      -- VA_Int
+               | CFG_Int CFG_Info Integer                  -- VA_Int
                | CFG_StringLiteral CFG_Info String         -- VA_String
                | CFG_Set CFG_Info (Set CFG_Value)          -- VA_Set
                  deriving (Eq, Ord, Show, Data, Typeable)
@@ -255,7 +255,7 @@ data VA_Value = VA_Map (Map VA_Value VA_Value)       -- map
               | VA_Rec (Map VA_Value VA_Value)       -- rec (key = VA_String)
               | VA_Set (Set VA_Value)                -- set
               | VA_Seq [VA_Value]                    -- seq
-              | VA_Int Int                           -- int
+              | VA_Int Integer                       -- integer
               | VA_Bool Bool                         -- boolean
               | VA_String String                     -- string
               | VA_Char Char                         -- char, from string[2]
