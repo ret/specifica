@@ -15,7 +15,7 @@ import           Language.TLAPlus.Syntax
 prettyPrintAS :: AS_Spec -> String
 prettyPrintAS spec =
   let extends = let AS_ExtendDecl _p l = extendDecl spec in map text l
-   in showWidth 500 $ -- 132 $ -- FIXME return to 79
+   in showWidth 79 $
       text "----" <+> text "MODULE" <+> text (name spec) <+> text "----"
   <$> (if length extends > 0
        then text "EXTENDS" <+> align (fillCat $ punctuate comma extends)
@@ -103,11 +103,12 @@ ppE (AS_Tuple _info l) =
 -- The alternative (prefered) would be to always force the LOR and LAND onto
 -- mutliple lines
 ppE (AS_LAND _pos le) =
-    let lt = map (\e -> group $ (text "/\\") <+> (parens $ ppE e)) le
-     in group( align $ vsep lt )
+    let lt = map (\e -> text "/\\" <+> ppE e) le
+     in align $ vsep lt
 ppE (AS_LOR _pos le) =
-    let lt = map (\e -> group $ (text "\\/") <+> (parens $ ppE e)) le
-     in group( align $ vsep lt )
+    let lt = map (\e -> text "\\/" <+> ppE e) le
+     in align $ vsep lt
+
 ppE (AS_Num _info n) = int n
 ppE (AS_Bool _info b) = text $ if b then "TRUE" else "FALSE"
 ppE (AS_StringLiteral _info s) = dquotes $ text s
@@ -313,8 +314,10 @@ table =
               ,prefix "UNCHANGED"  (op_prefix AS_UNCHANGED)
               ,prefix "[]"         (op_prefix AS_ALWAYS)
               ,prefix "<>"         (op_prefix AS_Eventually)]
-    ,{- 3/ 3-}[binary "/\\"        (op_infix  AS_AND)      AssocLeft
-              ,binary "\\/"        (op_infix  AS_OR)       AssocLeft]
+    -- we will not print () around the /\ in '(b /\ x) \/ y'
+    ,{- 3/ 3-}[binary "/\\"        (op_infix  AS_AND)      AssocLeft]
+    -- precendence lower than /\, will print (...) arond \/ in e.g. 'b /\ (x \/ y)'
+    ,{-25/25-}[binary "\\/"        (op_infix  AS_OR)       AssocLeft]
     ,{- 2/ 2-}[binary "~>"         (op_infix  AS_TildeGT)  AssocNone]
     ,{- 1/ 1-}[binary "=>"         (op_infix  AS_Implication) AssocNone
               ,prefix "INSTANCE"   (op_prefix AS_INSTANCE) ] -- ?? operator
