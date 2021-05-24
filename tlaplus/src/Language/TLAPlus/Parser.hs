@@ -176,7 +176,75 @@ quantifierBound1 = do{ id <- qualident
                      }
 
 expression :: TLAParser AS_Expression
-expression = buildExpressionParser table basicExpr <?> "expression"
+expression = do
+  aoExpr
+
+-- Expression with binary /\ and \/
+aoExpr :: TLAParser AS_Expression
+aoExpr = do
+  p <- getPosition
+  (e, mL) <- sepBy1NotLeft (sourceColumn p) (do try nonAOExpression)
+  case mL of
+    [] -> -- no \/ or /\ present
+      --return $ Trace.trace ("@E " ++ show e) e
+      return e
+    [(op,f)] -> do -- binary case X /\ Y, or X \/ Y
+      let x = AS_InfixOP (mkInfo p) op e f
+      --return $ Trace.trace ("@X " ++ show x) x
+      return x
+    _ -> do
+      -- 3 or more expressions with (potentially) a mix of \/ and /\
+      if (sameOp AS_AND (map fst mL)) || (sameOp AS_OR (map fst mL))
+        then do
+          -- use of head is safe here because of outer 'case mL...' check
+          let res = buildInfixTree e (fst $ head mL) (map snd mL)
+          --return $ Trace.trace ("### X = "++ show res) res
+          return res
+        else do
+          -- We are a little more agressive complaining here than
+          -- strictly needed, if we gave /\ precendence over \/.
+          -- Our error message matches TLC's (empiracally tested):
+          --   TLC input: b \/ x /\ y
+          --     Error evaluating expression:
+          --     Precedence conflict between ops \lor in block line 4, col 3 to line 4, col 4 of module ... and \land.
+          --     Parsing or semantic analysis failed.
+          let estr = concatMap (\(op,e) -> "\n  " ++ show op ++ " " ++ prettyPrintE e ++ " (at " ++ ppLocE e ++ ")") mL
+          fail ("Precedence conflict between: "++ estr)
+  where
+    sameOp :: AS_InfixOp -> [AS_InfixOp] -> Bool
+    sameOp op = all (== op)
+    buildInfixTree :: AS_Expression -> AS_InfixOp -> [AS_Expression] -> AS_Expression
+    buildInfixTree _ _ [] =
+      error "The impossible happened!" -- the aoExpr case mL check for [(op,f)] guards against this case! it's safe.
+    buildInfixTree e op [x] =
+      AS_InfixOP (infoE e) op e x
+    buildInfixTree e op (x:xs) =
+      AS_InfixOP (infoE e) op e (buildInfixTree x op xs)
+    sepBy1NotLeft :: Int -> GenParser Char st a -> GenParser Char st (a, [(AS_InfixOp, a)])
+    sepBy1NotLeft indent p =
+        do{ x <- p
+          ; xs <- many $ do{ pos <- getPosition
+                           ; if sourceColumn pos >= indent
+                               then do xx <-     (do { reservedOp "/\\"; return AS_AND })
+                                             <|> (do { reservedOp "\\/"; return AS_OR })
+                                       ff <- p
+                                       return (xx, ff)
+                               -- 'abort' the parsing of the infix operation in case the
+                               -- 2nd expression is to the left of the first.
+                               -- This is critical for siuations like in
+                               --   https://github.com/ret/specifica/issues/4
+                               -- where the /\ y must not associate with the y in \E ... y
+                               --   \/ /\ \E y \in {TRUE}: y
+                               --      /\ y
+                               else pzero
+                           }
+          ; return (x,xs)
+          }
+
+-- Expression without binary /\ and \/
+nonAOExpression :: TLAParser AS_Expression
+nonAOExpression = do
+  buildExpressionParser table basicExpr <?> "expression"
 
 expressionNoAngularClose :: TLAParser AS_Expression
 expressionNoAngularClose = buildExpressionParser table
@@ -314,8 +382,14 @@ table =
               ,prefix "UNCHANGED"  (op_prefix AS_UNCHANGED)
               ,prefix "[]"         (op_prefix AS_ALWAYS)
               ,prefix "<>"         (op_prefix AS_Eventually)]
-    ,{- 3/ 3-}[binary "\\/"        (op_infix  AS_OR)       AssocLeft
-              ,binary "/\\"        (op_infix  AS_AND)      AssocLeft]
+
+    -- Handle /\ and \/ outside the regular expression parser to
+    -- address the column sensitive https://github.com/ret/specifica/issues/4.
+    -- See aoExpr for new handling.
+    -- Note, we keep \/ and /\ in the Pretty printer as is.
+    --,{- 3/ 3-}[binary "\\/"        (op_infix  AS_OR)       AssocLeft
+    --          ,binary "/\\"        (op_infix  AS_AND)      AssocLeft]
+
     ,{- 2/ 2-}[binary "~>"         (op_infix  AS_TildeGT)  AssocNone]
     ,{- 1/ 1-}[binary "=>"         (op_infix  AS_Implication) AssocNone
               ,prefix "INSTANCE"   (op_prefix AS_INSTANCE) ] -- ?? operator
@@ -572,9 +646,9 @@ sepBy1At :: Int -> GenParser tok st a -> GenParser tok st sep
 sepBy1At indent p sep =
     do{ x <- p
       ; xs <- many $ do{ pos <- getPosition
-                       ; if sourceColumn pos < indent
-                         then pzero
-                         else sep >> p
+                       ; if sourceColumn pos == indent -- require precise alignment
+                         then sep >> p
+                         else pzero
                        }
       ; return (x:xs)
       }
