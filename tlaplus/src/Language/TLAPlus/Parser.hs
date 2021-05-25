@@ -171,10 +171,12 @@ theorem = do{ p <- getPosition
             }
 
 quantifierBound :: TLAParser AS_QBoundN
-quantifierBound = do{ ids <- commaSep qualident            -- FIXME, see p. 280
+quantifierBound = do{ idsOrTuple <-     (do t <- gtgtExpr    -- AS_Tuple
+                                            return [t])
+                                    <|> (commaSep qualident) -- AS_Ident
                     ; reservedOp "\\in"
                     ; expr <- expression
-                    ; return $ AS_QBoundN ids expr
+                    ; return $ AS_QBoundN idsOrTuple expr
                     }
 
 quantifierBound1 :: TLAParser AS_QBound1

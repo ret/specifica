@@ -236,9 +236,10 @@ evalE env e@(AS_SetComprehension _info (AS_QBound1 qvar qexpr) expr) =
               ) [] envs
       ; return $ VA_Set $ Set.fromList vs
       }
-  
--- support 1 qvar: {x*2 : x \in 1..3}
-evalE env e@(AS_SetGeneration _info expr (AS_QBoundN [qvar] qexpr)) =
+
+-- typical literal cases
+-- support 1 qvar: {x*2 : x \in 1..3},  in this case qvar is an AS_Ident
+evalE env e@(AS_SetGeneration _info expr (AS_QBoundN [qvar@(AS_Ident _ _ _)] qexpr)) =
     do{ elements <- enumElements env e qexpr
       ; envs <- mapM (\v -> bind env (qvar, v)) elements
       ; vs <- mapM (\env -> evalET env expr >>= \v -> return v) envs
@@ -257,6 +258,18 @@ evalE env e@(AS_SetGeneration _info expr (AS_QBoundN [qvarA, qvarB, qvarC] qexpr
     do{ elements <- enumElements env e qexpr
       ; let crossN = [ (a,b,c) | a <- elements, b <- elements, c <- elements]
       ; envs <- mapM (\(a,b,c) -> bind3 env (qvarA, a) (qvarB, b) (qvarC, c)) crossN 
+      ; vs <- mapM (\env -> evalET env expr >>= \v -> return v) envs
+      ; return $ VA_Set $ Set.fromList vs
+      }
+
+-- Support special 1 qvar (<<x+4,y-3>> \in..): {<<x+4,y-3>> : <<x,y>> \in {1,2,3} \X {1,2} },
+-- in this case qvar is a AS_Tuple
+-- the tuple is used to 'deconstruct' into x and y values (<<x,y>> \in ...)
+-- 2-element tuple case
+evalE env e@(AS_SetGeneration info expr (AS_QBoundN [(AS_Tuple _ [compA, compB])] qexpr)) =
+    do{ elements <- enumElements env e qexpr -- [VA_Seq [VA_Int .., VA_Int ..]]
+      ; let el2 = map (\(VA_Seq [a,b]) -> (a,b)) elements -- [(VA_Int .., VA_Int ..)]
+      ; envs <- mapM (\(vA,vB) -> bind2 env (compA, vA) (compB, vB)) el2
       ; vs <- mapM (\env -> evalET env expr >>= \v -> return v) envs
       ; return $ VA_Set $ Set.fromList vs
       }
@@ -933,7 +946,7 @@ lookupBinding i env kind =
 
 toId :: AS_Expression -> Id
 toId (AS_Ident _info qual name) = (qual, name)
-toId _ = error "unspecified"
+toId other = error ("toId unspecified for: " ++ show other)
 
 ppId :: Id -> Doc
 ppId (quallist, name) =
