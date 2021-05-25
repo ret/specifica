@@ -57,7 +57,7 @@ data AS_Expression =
       | AS_StringLiteral AS_InfoE String
       | AS_RecordType AS_InfoE [AS_RecordElementType]
       | AS_SetComprehension AS_InfoE AS_QBound1 AS_Expression
-      | AS_SetGeneration AS_InfoE AS_Expression AS_QBound1
+      | AS_SetGeneration AS_InfoE AS_Expression AS_QBoundN
       | AS_Except AS_Expression [AS_ExceptAssignment]
       | AS_OldVal
       | AS_Case AS_InfoE [AS_CaseArm] (Maybe AS_CaseArm)

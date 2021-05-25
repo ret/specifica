@@ -619,7 +619,7 @@ braceExpr = braces $ choice [
                      , try $ do{ p <- getPosition
                                ; e <- expression
                                ; reservedOp ":"
-                               ; q <- quantifierBound1
+                               ; q <- quantifierBound
                                ; return $ AS_SetGeneration (mkInfo p) e q
                                }
                      ,       do{ p <- getPosition

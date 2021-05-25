@@ -236,12 +236,31 @@ evalE env e@(AS_SetComprehension _info (AS_QBound1 qvar qexpr) expr) =
               ) [] envs
       ; return $ VA_Set $ Set.fromList vs
       }
-evalE env e@(AS_SetGeneration _info expr (AS_QBound1 qvar qexpr)) =
+  
+-- support 1 qvar: {x*2 : x \in 1..3}
+evalE env e@(AS_SetGeneration _info expr (AS_QBoundN [qvar] qexpr)) =
     do{ elements <- enumElements env e qexpr
       ; envs <- mapM (\v -> bind env (qvar, v)) elements
       ; vs <- mapM (\env -> evalET env expr >>= \v -> return v) envs
       ; return $ VA_Set $ Set.fromList vs
       }
+-- support 2 qvar: {<<x,y>> : x,y \in 1..3}
+evalE env e@(AS_SetGeneration _info expr (AS_QBoundN [qvarA, qvarB] qexpr)) =
+    do{ elements <- enumElements env e qexpr
+      ; let crossN = [ (a,b) | a <- elements, b <- elements]
+      ; envs <- mapM (\(a,b) -> bind2 env (qvarA, a) (qvarB, b)) crossN 
+      ; vs <- mapM (\env -> evalET env expr >>= \v -> return v) envs
+      ; return $ VA_Set $ Set.fromList vs
+      }
+-- support 3 qvar: {<<x,y,z>> : x,y,z \in 1..3}
+evalE env e@(AS_SetGeneration _info expr (AS_QBoundN [qvarA, qvarB, qvarC] qexpr)) =
+    do{ elements <- enumElements env e qexpr
+      ; let crossN = [ (a,b,c) | a <- elements, b <- elements, c <- elements]
+      ; envs <- mapM (\(a,b,c) -> bind3 env (qvarA, a) (qvarB, b) (qvarC, c)) crossN 
+      ; vs <- mapM (\env -> evalET env expr >>= \v -> return v) envs
+      ; return $ VA_Set $ Set.fromList vs
+      }
+  
 evalE env e@(AS_Case _info arms other) =
     do{ arm <- findM (\(AS_CaseArm _info cexpr _vexpr) ->
                         evalET env cexpr >>= \bv ->
@@ -887,8 +906,19 @@ type Binding = (Id, VA_Value) -- add module qualifiers
 
 mkEmptyEnv = []
 
-bind :: Env -> (AS_Expression, VA_Value) -> ThrowsError Env
+bind :: Env -> (AS_Expression, VA_Value)
+     -> ThrowsError Env
 bind env (name, expr) = return $ (toId name, expr) : env
+
+bind2 :: Env -> (AS_Expression, VA_Value) -> (AS_Expression, VA_Value)
+      -> ThrowsError Env
+bind2 env (nameA, exprA) (nameB, exprB) =
+  return $ (toId nameA, exprA) : (toId nameB, exprB) : env
+
+bind3 :: Env -> (AS_Expression, VA_Value) -> (AS_Expression, VA_Value) -> (AS_Expression, VA_Value)
+      -> ThrowsError Env
+bind3 env (nameA, exprA) (nameB, exprB) (nameC, exprC) =
+  return $ (toId nameA, exprA) : (toId nameB, exprB) : (toId nameC, exprC) : env
 
 replace :: Env -> (AS_Expression, VA_Value) -> ThrowsError Env
 replace env (name, expr) =

@@ -120,8 +120,8 @@ ppE (AS_RecordType _info l) =
      in brackets $ align (cat (punctuate comma t))
 ppE (AS_SetComprehension _info b e) =
     braces $ align (ppQBound1 b <//> text ":" <+> align (ppE e))
-ppE (AS_SetGeneration _info e b) =
-    braces $ align (ppE e <//> text ":" <+> align (ppQBound1 b))
+ppE (AS_SetGeneration _info e bl) =
+    braces $ align (ppE e <//> text ":" <+> align (ppQBoundN bl))
 ppE (AS_Except e l) =
     let a = map ( \ (AS_ExceptAssignment navs e) ->
                      let ns = cat $ map (\n ->
