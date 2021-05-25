@@ -26,6 +26,7 @@ data AS_UnitDef =
   | AS_Assume AS_InfoU AS_Expression
   | AS_Theorem AS_InfoU AS_Expression
   | AS_ConstantDecl AS_InfoU [AS_Expression]
+  | AS_RecursiveDecl AS_InfoU [AS_OperatorHead]
   | AS_VariableDecl AS_InfoU [AS_Expression]
   | AS_Separator AS_InfoU
     deriving (Eq, Ord, Show, Data, Typeable)
@@ -205,6 +206,7 @@ infoU (AS_OperatorDef info _ _)   = info
 infoU (AS_Assume info _)          = info
 infoU (AS_Theorem info _)         = info
 infoU (AS_ConstantDecl info _)    = info
+infoU (AS_RecursiveDecl info _)   = info
 infoU (AS_VariableDecl info _)    = info
 infoU (AS_Separator info)         = info
 

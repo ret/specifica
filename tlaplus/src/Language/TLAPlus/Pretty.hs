@@ -43,6 +43,8 @@ ppUnit (AS_Assume _p e) = text "ASSUME" </> ppE e
 ppUnit (AS_Theorem _p e) = text "THEOREM" </> ppE e
 ppUnit (AS_ConstantDecl _p l) =
     text "CONSTANT" </> align(fillCat $ punctuate comma (map ppE l))
+ppUnit (AS_RecursiveDecl _p l) =
+    text "RECURSIVE" </> align(fillCat $ punctuate comma (map ppOperatorHead l))
 ppUnit (AS_VariableDecl _p l) =
     text "VARIABLE" </> align(fillCat $ punctuate comma (map ppE l))
 ppUnit (AS_Separator _p) = text "----"
@@ -168,6 +170,12 @@ ppOperatorDef h l expr =
                else empty
      in     group (ppE h <//> args <+> text "==")
         <$> indent 2 (align (group (ppE expr)))
+
+ppOperatorHead (AS_OpHead h l) =
+    let args = if length l > 0
+               then parens (cat (punctuate comma (map ppE l)))
+               else empty
+     in group (ppE h <//> args)
 
 ppQBoundN :: AS_QBoundN -> Doc
 ppQBoundN (AS_QBoundN vars expr) =

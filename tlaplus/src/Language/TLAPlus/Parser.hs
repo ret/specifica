@@ -77,6 +77,14 @@ constant = do{ p <- getPosition
              ; return $ AS_ConstantDecl p l
              }
 
+-- p.2, of https://lamport.azurewebsites.net/tla/tla2-guide.pdf
+recursive :: TLAParser AS_UnitDef
+recursive = do{ p <- getPosition
+             ; reserved "RECURSIVE"
+             ; l <- commaSep operatorHead
+             ; return $ AS_RecursiveDecl p l
+             }
+
 variable :: TLAParser AS_UnitDef
 variable = do{ p <- getPosition
              ; reserved "VARIABLE" <|> reserved "VARIABLES"
@@ -89,6 +97,7 @@ unit = do{ l <- sepBy (choice [ -- try as cheap way to left factor identifier
                          try operatorDef
                        , try funDef
                        , constant
+                       , recursive
                        , variable
                        , assume
                        , theorem
@@ -633,7 +642,8 @@ letExpr = do{ p <- getPosition
             ; l <- sepBy              -- USE unit?
                      (choice [
                         try operatorDef
-                      , funDef
+                      , try funDef
+                      , recursive
                       ])
                      whiteSpace
             ; reserved "IN"
@@ -928,6 +938,7 @@ tladef = emptyDef {
                       , "<-"
                       ]
 , P.reservedNames   = [ "CONSTANT", "CONSTANTS"
+                      , "RECURSIVE"
                       , "VARIABLE", "VARIABLES"
                       , "ASSUME"
                       , "LET", "IN", "IF", "THEN", "ELSE", "CHOOSE",
