@@ -59,6 +59,8 @@ ppE (AS_OpApp _info e l) =
                then empty
                else parens( align( cat $ punctuate comma (map (group . ppE) l)))
      in group (ppE e <//> group(args))
+ppE (AS_Lambda _info l e) =
+    text "LAMBDA" <+> align( cat $ punctuate comma (map ppE l)) <+> text ":" <+> align (ppE e)
 ppE (AS_FunctionType _info a b) = brackets $ ppE a </> text "->" </> ppE b
 -- hack to make sure that SUBSET (A \X B) is printed with the () in place,
 -- otherwise TLC will complain about ambigious precedence. Note that \X isn't

@@ -441,7 +441,8 @@ basicExprListNoAngularClose =
     , chooseExpr
     , quantifiedExpr
     , gtgtExpr
-    , try operatorAppExpr --
+    , try operatorAppExpr
+    , lambdaExpr
     , landExpr
     , lorExpr
     , number
@@ -516,6 +517,15 @@ operatorAppExpr = do{ p <- getPosition
                     ; l <- parens $ commaSep expression -- FIXME too liberal
                     ; return $ AS_OpApp (mkInfo p) qname l
                     }
+
+lambdaExpr :: TLAParser AS_Expression
+lambdaExpr = do{ p <- getPosition
+               ; reserved "LAMBDA"
+               ; l <- commaSep1 qualident
+               ; reservedOp ":"
+               ; e <- expression
+               ; return $ AS_Lambda (mkInfo p) l e
+               }
 
 squareExpr :: TLAParser AS_Expression -- left factor [ ...
 squareExpr = squares $  choice [ -- use try to tell -> from |->
@@ -943,8 +953,9 @@ tladef = emptyDef {
                       , "RECURSIVE"
                       , "VARIABLE", "VARIABLES"
                       , "ASSUME"
-                      , "LET", "IN", "IF", "THEN", "ELSE", "CHOOSE",
-                        "EXCEPT", "!.", "CASE", "[]"
+                      , "LET", "IN", "IF", "THEN", "ELSE", "CHOOSE"
+                      , "LAMBDA"
+                      ,  "EXCEPT", "!.", "CASE", "[]"
                       -- operator synonyms
                       , "\\A", "\\E"
                       , "TRUE", "FALSE"

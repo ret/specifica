@@ -38,6 +38,7 @@ data AS_Expression =
         AS_Ident AS_InfoE [String] String -- possibly prefixed X!Y!a
       | AS_FunArgList AS_InfoE [AS_Expression]
       | AS_OpApp AS_InfoE AS_Expression [AS_Expression]
+      | AS_Lambda AS_InfoE [AS_Expression] AS_Expression
       | AS_FunctionType AS_InfoE AS_Expression AS_Expression
       | AS_PrefixOP AS_InfoE AS_PrefixOp AS_Expression
       | AS_PostfixOP AS_InfoE AS_PostfixOp AS_Expression
@@ -166,6 +167,7 @@ infoE :: AS_Expression -> AS_InfoE
 infoE (AS_Ident info _ _) = info
 infoE (AS_FunArgList info _) = info
 infoE (AS_OpApp info _ _) = info
+infoE (AS_Lambda info _ _) = info
 infoE (AS_FunctionType info _ _) = info
 infoE (AS_PrefixOP info _ _) = info
 infoE (AS_PostfixOP info _ _) = info
