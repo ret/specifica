@@ -102,6 +102,7 @@ data AS_PrefixOp = AS_SUBSET
                  | AS_DOMAIN
                  | AS_UNCHANGED
                  | AS_Not
+                 | AS_Neg
                  | AS_ALWAYS
                  | AS_Eventually
                    deriving (Eq, Ord, Show, Data, Typeable)

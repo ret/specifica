@@ -455,6 +455,7 @@ prefix_op_table =
   , (AS_UNION,  (op_union))
   , (AS_DOMAIN, (op_domain))
   , (AS_Not, (op_not))
+  , (AS_Neg, (op_neg))
   ]
 
 postfix_op_table :: [(AS_PostfixOp,
@@ -724,6 +725,10 @@ op_union i v = let (e, a) = i
 op_not _i (VA_Bool b) = return $ VA_Bool$ not b
 op_not i v = let (e, a) = i
               in throwError $ IllegalType e a v TY_Bool "negation expression"
+
+op_neg _i (VA_Int v) = return $ VA_Int $ (0-v)
+op_neg i v = let (e, a) = i
+              in throwError $ IllegalType e a v TY_Int "neg expression"
 
 -- postfix
 op_prime _i a = return a -- FIXME, noop for now

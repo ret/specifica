@@ -192,6 +192,7 @@ ppPrefixOP AS_UNION      = text "UNION" <//> space
 ppPrefixOP AS_DOMAIN     = text "DOMAIN" <//> space
 ppPrefixOP AS_UNCHANGED  = text "UNCHANGED" <//> space
 ppPrefixOP AS_Not        = text "~"
+ppPrefixOP AS_Neg        = text "-"
 ppPrefixOP AS_ALWAYS     = text "[]"
 ppPrefixOP AS_Eventually = text "<>"
 
@@ -294,7 +295,7 @@ table =
               ,binary "\\times"    (op_infix  AS_Times)    AssocLeft -- ??
               ,binary "\\o"        (op_infix  AS_Circ)     AssocLeft
               ,binary "\\circ"     (op_infix  AS_Circ)     AssocLeft]
-     {-12/12-}
+    ,{-12/12-}[prefix "-"          (op_prefix AS_Neg)]               -- prio 12, book p. 271
     ,{-11/11-}[binary "-"          (op_infix  AS_Minus)    AssocLeft]
     ,{-10/10-}[binary "+"          (op_infix  AS_Plus)     AssocLeft]
     ,{- 9/ 9-}[binary ".."         (op_infix  AS_DOTDOT)   AssocNone
