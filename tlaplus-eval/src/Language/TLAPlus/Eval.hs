@@ -748,6 +748,10 @@ evalOperator(env, argnames, exprargs, expr) =
                                                case e of
                                                  i@(AS_Ident pos l n) -> do
                                                    lookupBinding i env ("Cannot eval " ++ (pp $ ppE expr) ++ ",")
+                                                 e@(AS_Lambda lamInfo lamArgs lamExpr) -> do
+                                                   return $ VA_OperatorDef lamInfo
+                                                              (AS_OpHead (lamName e) lamArgs)
+                                                              lamExpr
                                                  _ -> -- a literal (e.g. int, string, etc.)
                                                    evalET env e
                                            ) exprargs
@@ -764,6 +768,10 @@ evalOperator(env, argnames, exprargs, expr) =
     pureName :: AS_Expression -> AS_Expression
     pureName   (AS_OpApp _ name _) = name -- e.g. operator P(_) -> P
     pureName i@(AS_Ident _ _ _) = i
+    lamName e@(AS_Lambda info args _) =
+      let (pos,_,_) = info
+          (a,b) = srcLineColumn pos
+      in mkIdent $ "lam_A" ++ (show $ length args) ++ "_L" ++ (show a) ++ "_C" ++ (show b)
 
 enumElements :: Env -> AS_Expression -> AS_Expression -> ThrowsError [VA_Value]
 enumElements env pe e =
