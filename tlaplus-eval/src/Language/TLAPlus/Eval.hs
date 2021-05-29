@@ -738,19 +738,32 @@ op_closefunapp _i a =  return a -- noop
 
 --
 evalOperator(env, argnames, exprargs, expr) =
+  -- argnames are the formal arguments: can be AS_Ident, or AS_OpApp (in case of level 1 operators such as P(_)
+  -- exprargs are the actual arguments: if they refer to a level 1 operator it'll just be the AS_Ident of it's name
     if length argnames == 0
        then evalET env expr
        else if length argnames == length exprargs
-            then do{ exprargvalues <- mapM (evalET env) exprargs
-                   ; env' <- foldM (\env (n,v) -> bind env (n,v))
-                                   env (zip argnames exprargvalues)
+            then do{
+                     exprargvalues <- mapM (\e -> do
+                                               case e of
+                                                 i@(AS_Ident pos l n) -> do
+                                                   lookupBinding i env ("Cannot eval " ++ (pp $ ppE expr) ++ ",")
+                                                 _ -> -- a literal (e.g. int, string, etc.)
+                                                   evalET env e
+                                           ) exprargs
+                   ; env' <- foldM (\env (n,v) -> bind env (pureName n, v)) env (zip argnames exprargvalues)
                    ; evalET env' expr
                    }
             else throwError $
-              Default ("Operator application error (arg length missmatch)."++
-                       "ARGNAMES=" ++ show argnames ++
-                       "EXPRARGS=" ++ show exprargs ++
-                       "EXPR = "++show expr)
+              Default ((ppLocE expr) ++
+                       "\n    operator application error, arg length missmatch:"++
+                       "\n      formal arguments: " ++ (pp $ hcat (punctuate comma (map ppE argnames))) ++
+                       "\n      actual arguments: " ++ (pp $ hcat (punctuate comma (map ppE exprargs))) ++
+                       "\n      expression: " ++ (pp $ ppE expr))
+  where
+    pureName :: AS_Expression -> AS_Expression
+    pureName   (AS_OpApp _ name _) = name -- e.g. operator P(_) -> P
+    pureName i@(AS_Ident _ _ _) = i
 
 enumElements :: Env -> AS_Expression -> AS_Expression -> ThrowsError [VA_Value]
 enumElements env pe e =
