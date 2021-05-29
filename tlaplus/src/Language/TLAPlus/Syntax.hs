@@ -163,6 +163,12 @@ formatLoc info =
         col  = sourceColumn info
      in path ++ ":" ++ show line ++ ":" ++ show col
 
+srcLineColumn :: SourcePos -> (Int,Int)
+srcLineColumn info =
+    let line = sourceLine info
+        col  = sourceColumn info
+     in (line, col)
+
 infoE :: AS_Expression -> AS_InfoE
 infoE (AS_Ident info _ _) = info
 infoE (AS_FunArgList info _) = info
