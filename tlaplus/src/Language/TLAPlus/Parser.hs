@@ -529,9 +529,9 @@ lambdaExpr = do{ p <- getPosition
 
 squareExpr :: TLAParser AS_Expression -- left factor [ ...
 squareExpr = squares $  choice [ -- use try to tell -> from |->
-                          try recordExcept
+                          try functionType            -- [ 1..3 -> 4..5]
+                        , try recordExcept
                         , try recordFunction
-                        , try functionType
                         , try recordType
                         , try quantifierBoundFunction
                         ]
