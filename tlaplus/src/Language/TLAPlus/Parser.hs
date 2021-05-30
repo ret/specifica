@@ -906,7 +906,7 @@ tladef = emptyDef {
   P.commentStart    = "(*"
 , P.commentEnd      = "*)"
 , P.commentLine     = "\\*"
-, P.nestedComments  = False
+, P.nestedComments  = True -- for PlusCal, e.g. Examples/specification/TLC/TLCMC.tla
 , P.identStart      = letter <|> char '_'
 -- TLC EXTENSION, allow @ in identifiers for 'short' pc guards (when a@b ...)
 , P.identLetter     = alphaNum <|> char '_' <|> char '@'
