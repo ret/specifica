@@ -484,6 +484,10 @@ op_cup _i a@(VA_RecType ma) b@(VA_RecType mb) = do
     _ -> do
       let kls = map (\(VA_String s) -> s) kl
       error $ "Overlapping keys not supported: " ++ show kls
+op_cup _i a@(VA_FunType da ra) b@(VA_FunType db rb) = do
+  d <- op_cup _i da db
+  r <- op_cup _i ra rb
+  return $ VA_FunType d r
 op_cup i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 
 op_cap _i (VA_Set a) (VA_Set b) = return $ VA_Set $ Set.intersection a b
