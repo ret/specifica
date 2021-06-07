@@ -9,7 +9,8 @@ import qualified Data.Set as Set (union, intersection,
 import Data.Set as Set (fromList, toList, elems, (\\), member, isSubsetOf)
 import Data.List as List (find, elemIndex, map, elem, lookup)
 import qualified Data.Map as Map (union, lookup, insert, empty, singleton,
-                                  keys, elems, fromList, toList)
+                                  keys, elems, fromList, toList,
+                                  difference, foldWithKey, intersection)
 
 import GHC.Stack
 
@@ -475,8 +476,14 @@ op_mult i va vb = throwError $ TypeMissmatch i va vb [TY_Int]
 
 op_cup _i (VA_Set a) (VA_Set b) = return $ VA_Set $ Set.union a b
 op_cup _i (VA_Set a) b = return $ VA_Set $ Set.insert b a
-op_cup _i a@(VA_RecType _) b@(VA_RecType _) =
-    return $ VA_Set $ Set.fromList [a,b]
+op_cup _i a@(VA_RecType ma) b@(VA_RecType mb) = do
+  let kl = Map.keys (Map.intersection ma mb)
+  case kl of
+    [] -> do
+      return $ VA_Set $ Set.fromList [a,b] 
+    _ -> do
+      let kls = map (\(VA_String s) -> s) kl
+      error $ "Overlapping keys not supported: " ++ show kls
 op_cup i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 
 op_cap _i (VA_Set a) (VA_Set b) = return $ VA_Set $ Set.intersection a b
@@ -486,6 +493,7 @@ op_cap i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 op_eq _i (VA_Atom a) (VA_Atom b) = return $ VA_Bool $ a == b
 op_eq _i (VA_Atom _a) _b = return $ VA_Bool False
 op_eq _i _a (VA_Atom _b) = return $ VA_Bool False
+op_eq _i (VA_Map a) (VA_Rec b) = return $ VA_Bool $ a == b
 op_eq i a b = if typeOf a == typeOf b
                 then return $ VA_Bool $ a == b
                 else throwError $ TypeMissmatch i a b $ [typeOf a, typeOf b]
@@ -493,6 +501,7 @@ op_eq i a b = if typeOf a == typeOf b
 op_neq _i (VA_Atom a) (VA_Atom b) = return $ VA_Bool $ a /= b
 op_neq _i (VA_Atom _a) _b = return $ VA_Bool True
 op_neq _i _a (VA_Atom _b) = return $ VA_Bool True
+op_neq _i (VA_Map a) (VA_Rec b) = return $ VA_Bool $ a /= b
 op_neq i a b = if typeOf a == typeOf b
                  then return $ VA_Bool $ a /= b
                  else throwError $ TypeMissmatch i a b $ [typeOf a, typeOf b]
@@ -509,7 +518,19 @@ op_gt i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
 op_gteq i (VA_Int a) (VA_Int b) = return $ VA_Bool $ a >= b
 op_gteq i a b = throwError $ TypeMissmatch i a b $ [TY_Int]
 
-op_subseteq _i (VA_Set a) (VA_Set b) = return $ VA_Bool $ Set.isSubsetOf a b
+op_subseteq _i (VA_Set a) (VA_Set b) =
+  return $ VA_Bool $ Set.isSubsetOf a b
+op_subseteq _i (VA_RecType a) (VA_RecType b) = do
+  l <- mapM (\k ->
+                case Map.lookup k b of
+                  Nothing ->
+                    return $ VA_Bool False -- k is in a but not b
+                  Just v -> -- k in a and b, check subseteq of values
+                    let Just va = Map.lookup k a -- Just safe since we did earlier lookup
+                        Just vb = Map.lookup k b
+                    in op_subseteq _i va vb
+            ) (Map.keys a)
+  return $ VA_Bool $ all (\(VA_Bool b) -> b) l
 op_subseteq i va vb = throwError $ TypeMissmatch i va vb [TY_Set]
 
 op_setminus _i (VA_Set a) (VA_Set b) = return $ VA_Set $ a \\ b
@@ -544,16 +565,33 @@ op_in i (VA_Seq l) (VA_SeqType tv) =
     do{ bs <- mapM (\v -> op_in i v tv) l
       ; return $ VA_Bool $ all (\(VA_Bool b) -> b) bs
       }
-op_in i (VA_Map map) (VA_FunType a b) = -- [x |-> y] \in [X -> Y]
-    -- FIXME, the FunType may have keys that the are not in the record, this
-    -- is some ad-hoc subtype, but really I don't think TLA+ allows for it.
+op_in i (VA_Map map) (VA_FunType a b) = -- x :> y \in [X -> Y], e.g. "a" :> 4 \in [{"a"} -> 3..4]
     do{ bs <- mapM (\(k,v) -> do{ VA_Bool kbool <- op_in i k a
                                 ; VA_Bool vbool <- op_in i v b
                                 ; return $ VA_Bool (kbool && vbool)
                                 }) (Map.toList map)
       ; return $ VA_Bool $ all (\(VA_Bool b) -> b) bs
       }
-op_in i (VA_Rec vmap) (VA_RecType tmap) =
+op_in i (VA_Rec map) (VA_FunType a b) = -- [x |-> y] \in [X -> Y], e.g. [a |-> 4] \in [{"a"} -> 3..4]
+    do{ bs <- mapM (\(k,v) -> do{ VA_Bool kbool <- op_in i k a
+                                ; VA_Bool vbool <- op_in i v b
+                                ; return $ VA_Bool (kbool && vbool)
+                                }) (Map.toList map)
+      ; return $ VA_Bool $ all (\(VA_Bool b) -> b) bs
+      }
+op_in i (VA_Map vmap) (VA_RecType tmap) = -- "a":>4 \in [a: 3..4]
+    if Map.keys vmap == Map.keys tmap -- FIXME how about ordering?
+    -- FIXME, the RecType may have keys that the are not in the record, this
+    -- is some ad-hoc subtype, but really I don't think TLA+ allows for it.
+    then do{ bs <- mapM (\k -> do{ let Just v = Map.lookup k vmap
+                                 ; let Just t = Map.lookup k tmap
+                                 ; VA_Bool bool <- op_in i v t
+                                 ; return $ VA_Bool bool
+                                 }) (Map.keys vmap)
+           ; return $ VA_Bool $ all (\(VA_Bool b) -> b) bs
+           }
+    else return $ VA_Bool False -- incl. missmatch of record keys
+op_in i (VA_Rec vmap) (VA_RecType tmap) = -- [a |-> 4] \in [a: 3..4]
     if Map.keys vmap == Map.keys tmap -- FIXME how about ordering?
     -- FIXME, the RecType may have keys that the are not in the record, this
     -- is some ad-hoc subtype, but really I don't think TLA+ allows for it.
@@ -775,8 +813,71 @@ evalOperator(env, argnames, exprargs, expr) =
 
 enumElements :: Env -> AS_Expression -> AS_Expression -> ThrowsError [VA_Value]
 enumElements env pe e =
-    do{ evalET env e >>= \v -> case v of
-          VA_Set s -> return $ elems s
+    do{ evalET env e >>= \v -> enumSet pe e v }
+
+enumSet :: AS_Expression -> AS_Expression -> VA_Value -> ThrowsError [VA_Value]
+enumSet pe e v = -- pe and e are used for error reporting only
+    do{ case v of
+          VA_Set s -> do
+            return $ elems s
+          VA_FunType d r -> do -- [1..2 -> 3..4], or [{"a","b"} -> 1..2]
+            case (d,r) of
+              (VA_Set ds, VA_Set rs) -> do
+                let crossN = [ VA_Map (Map.fromList [(a,b)]) |
+                                 a <- Set.toList ds,
+                                 b <- Set.toList rs]
+                return crossN
+              (VA_Set ds, v) -> do
+                v' <- enumSet pe e v
+                let crossN = [ VA_Map (Map.fromList [(a,b)]) |
+                                 a <- Set.toList ds,
+                                 b <- v']
+                return crossN
+              _ -> throwError $
+                IllegalType pe e v TY_Set "element enumeration (TODO improve nested cases)"
+          VA_RecType m -> do -- [a: 1..2, b: 3..4], or [{"a"} -> 1..2]
+            crossN <- case Map.keys m of
+                           [k] -> do
+                             let Just v = Map.lookup k m
+                             v' <- enumSet pe e v
+                             return $ [VA_Rec (Map.fromList [(k,v1)]) |
+                                         v1 <- v']
+                           [k1,k2] -> do
+                             let Just v1 = Map.lookup k1 m
+                             v1' <- enumSet pe e v1
+                             let Just v2 = Map.lookup k2 m
+                             v2' <- enumSet pe e v2
+                             return $ [VA_Rec (Map.fromList [(k1,x1), (k2,x2)]) |
+                                         x1 <- v1',
+                                         x2 <- v2' ]
+                           [k1,k2,k3] -> do
+                             let Just v1 = Map.lookup k1 m
+                             v1' <- enumSet pe e v1
+                             let Just v2 = Map.lookup k2 m
+                             v2' <- enumSet pe e v2
+                             let Just v3 = Map.lookup k3 m
+                             v3' <- enumSet pe e v3
+                             return $ [VA_Rec (Map.fromList [(k1,x1), (k2,x2), (k3,x3)]) |
+                                         x1 <- v1',
+                                         x2 <- v2',
+                                         x3 <- v3' ]
+                           [k1,k2,k3,k4] -> do
+                             let Just v1 = Map.lookup k1 m
+                             v1' <- enumSet pe e v1
+                             let Just v2 = Map.lookup k2 m
+                             v2' <- enumSet pe e v2
+                             let Just v3 = Map.lookup k3 m
+                             v3' <- enumSet pe e v3
+                             let Just v4 = Map.lookup k4 m
+                             v4' <- enumSet pe e v4
+                             return $ [VA_Rec (Map.fromList [(k1,x1), (k2,x2), (k3,x3), (k4,x4)]) |
+                                         x1 <- v1',
+                                         x2 <- v2',
+                                         x3 <- v3',
+                                         x4 <- v4' ]
+                           _ ->
+                             error $ "We currently only support record with up to 4 keys."
+            return crossN
           _ -> throwError $
             IllegalType pe e v TY_Set "element enumeration"
       }
