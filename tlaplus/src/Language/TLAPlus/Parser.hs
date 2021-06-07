@@ -406,7 +406,7 @@ table =
     ,{- 2/ 2-}[binary "~>"         (op_infix  AS_TildeGT)  AssocNone]
     ,{- 1/ 1-}[binary "=>"         (op_infix  AS_Implication) AssocNone
               ,prefix "INSTANCE"   (op_prefix AS_INSTANCE) -- ?? operator
-              ,prefix "INSTANCE"   (op_prefix AS_LOCAL) ]  -- ?? operator
+              ,prefix "LOCAL"      (op_prefix AS_LOCAL) ]  -- ?? operator
     ]
 
 binary  name fun assoc = Infix (do{ p <- getPosition
