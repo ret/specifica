@@ -141,19 +141,21 @@ operatorHeadEntry = do{ p <- getPosition
 
 operatorDef :: TLAParser AS_UnitDef
 operatorDef = do{ p <- getPosition
+                ; local <- option False (do reserved "LOCAL"; return True)
                 ; h <- operatorHead
                 ; reservedOp "=="
                 ; e <- expression
-                ; return $ AS_OperatorDef p h e
+                ; return $ AS_OperatorDef p local h e
                 }
 
 funDef :: TLAParser AS_UnitDef
 funDef = do{ p <- getPosition
+           ; local <- option False (do reserved "LOCAL" ; return True)
            ; qname <- qualident
            ; args <- squares $ commaSep quantifierBound
            ; reservedOp "=="
            ; expr <- expression
-           ; return $ AS_FunctionDef p qname args expr
+           ; return $ AS_FunctionDef p local qname args expr
            }
 
 assume :: TLAParser AS_UnitDef
@@ -403,7 +405,8 @@ table =
 
     ,{- 2/ 2-}[binary "~>"         (op_infix  AS_TildeGT)  AssocNone]
     ,{- 1/ 1-}[binary "=>"         (op_infix  AS_Implication) AssocNone
-              ,prefix "INSTANCE"   (op_prefix AS_INSTANCE) ] -- ?? operator
+              ,prefix "INSTANCE"   (op_prefix AS_INSTANCE) -- ?? operator
+              ,prefix "INSTANCE"   (op_prefix AS_LOCAL) ]  -- ?? operator
     ]
 
 binary  name fun assoc = Infix (do{ p <- getPosition
@@ -964,6 +967,7 @@ tladef = emptyDef {
                       , "INVARIANT", "INVARIANTS"
                       , "PROPERTY", "PROPERTIES"
                       , "SYMMETRY"
+                      , "LOCAL"
                         {- ,"VIEW" HACK FIXME, took out to allow for VIEW(R) -}
                         {- where VIEW is part of an expression (short.hs)    -}
                       ]

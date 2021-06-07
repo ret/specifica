@@ -21,8 +21,8 @@ data AS_QBoundN = AS_QBoundN [AS_Expression] AS_Expression
 data AS_QBound1 = AS_QBound1 AS_Expression AS_Expression
                   deriving (Eq, Ord, Show, Data, Typeable)
 data AS_UnitDef =
-    AS_FunctionDef AS_InfoU AS_Expression [AS_QBoundN] AS_Expression
-  | AS_OperatorDef AS_InfoU AS_OperatorHead AS_Expression
+    AS_FunctionDef AS_InfoU Bool AS_Expression [AS_QBoundN] AS_Expression
+  | AS_OperatorDef AS_InfoU Bool AS_OperatorHead AS_Expression
   | AS_Assume AS_InfoU AS_Expression
   | AS_Theorem AS_InfoU AS_Expression
   | AS_ConstantDecl AS_InfoU [AS_Expression]
@@ -99,6 +99,7 @@ data AS_MapTo = AS_MapTo AS_Field AS_Expression
 
 data AS_PrefixOp = AS_SUBSET
                  | AS_INSTANCE
+                 | AS_LOCAL
                  | AS_UNION
                  | AS_DOMAIN
                  | AS_UNCHANGED
@@ -210,14 +211,14 @@ infoE _ = mkDummyInfo "ERROR-Syntax.infoE-UPDATE-NEEDED"
 mkDummyInfo s  = (PPos.newPos s 0 0, Nothing, Nothing)
 
 infoU :: AS_UnitDef -> AS_InfoU
-infoU (AS_FunctionDef info _ _ _) = info
-infoU (AS_OperatorDef info _ _)   = info
-infoU (AS_Assume info _)          = info
-infoU (AS_Theorem info _)         = info
-infoU (AS_ConstantDecl info _)    = info
-infoU (AS_RecursiveDecl info _)   = info
-infoU (AS_VariableDecl info _)    = info
-infoU (AS_Separator info)         = info
+infoU (AS_FunctionDef info _ _ _ _) = info
+infoU (AS_OperatorDef info _ _ _)   = info
+infoU (AS_Assume info _)            = info
+infoU (AS_Theorem info _)           = info
+infoU (AS_ConstantDecl info _)      = info
+infoU (AS_RecursiveDecl info _)     = info
+infoU (AS_VariableDecl info _)      = info
+infoU (AS_Separator info)           = info
 
 -------------------------------------------------------------------------------
 

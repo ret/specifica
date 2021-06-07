@@ -35,10 +35,10 @@ ppUnitList :: [AS_UnitDef] -> Doc
 ppUnitList l = vcat $ punctuate space (map ppUnit l)
 
 ppUnit :: AS_UnitDef -> Doc
-ppUnit (AS_FunctionDef _p headexpr qbounds expr) =
-    ppFunctionDef headexpr qbounds expr
-ppUnit (AS_OperatorDef _p (AS_OpHead h l) expr) =
-    ppOperatorDef h l expr
+ppUnit (AS_FunctionDef _p local headexpr qbounds expr) =
+    ppFunctionDef local headexpr qbounds expr
+ppUnit (AS_OperatorDef _p local (AS_OpHead h l) expr) =
+    ppOperatorDef local h l expr
 ppUnit (AS_Assume _p e) = text "ASSUME" </> ppE e
 ppUnit (AS_Theorem _p e) = text "THEOREM" </> ppE e
 ppUnit (AS_ConstantDecl _p l) =
@@ -161,16 +161,18 @@ ppE (AS_CloseFunApp) = text "]"
 -- missing pretty printer support, debug aid
 -- ppE e = text $ "(<?>" ++ (show e) ++ "<?>)"
 
-ppFunctionDef headexpr qbounds expr =
-    let bounds = group (cat $ punctuate comma $ map ppQBoundN qbounds)
-     in     group( ppE headexpr <//> brackets (align bounds) <+> text "==")
+ppFunctionDef local headexpr qbounds expr =
+    let lo = if local then text "LOCAL" else empty
+        bounds = group (cat $ punctuate comma $ map ppQBoundN qbounds)
+     in     group( lo <+> ppE headexpr <//> brackets (align bounds) <+> text "==")
         </> group (ppE expr)
 
-ppOperatorDef h l expr =
-    let args = if length l > 0
+ppOperatorDef local h l expr =
+    let lo = if local then text "LOCAL" else empty
+        args = if length l > 0
                then parens (cat (punctuate comma (map ppE l)))
                else empty
-     in     group (ppE h <//> args <+> text "==")
+     in     group (lo <+> ppE h <//> args <+> text "==")
         <$> indent 2 (align (group (ppE expr)))
 
 ppOperatorHead (AS_OpHead h l) =
@@ -190,6 +192,7 @@ ppQBound1 (AS_QBound1 var expr) =
 ppPrefixOP :: AS_PrefixOp -> Doc
 ppPrefixOP AS_SUBSET     = text "SUBSET" <//> space
 ppPrefixOP AS_INSTANCE   = text "INSTANCE" <//> space
+ppPrefixOP AS_LOCAL      = text "LOCAL" <//> space
 ppPrefixOP AS_UNION      = text "UNION" <//> space
 ppPrefixOP AS_DOMAIN     = text "DOMAIN" <//> space
 ppPrefixOP AS_UNCHANGED  = text "UNCHANGED" <//> space
@@ -385,9 +388,9 @@ ppVA (VA_String s) = dquotes $ text s
 ppVA (VA_Char c) = char '\'' <//> char c <//> char '\''
 ppVA (VA_Atom a) = text a
 ppVA (VA_FunctionDef _info head quants expr) =
-    ppFunctionDef head quants expr
+    ppFunctionDef False head quants expr
 ppVA (VA_OperatorDef _info (AS_OpHead head args) expr) =
-    ppOperatorDef head args expr
+    ppOperatorDef False head args expr
 ppVA (VA_FunType a b) =
     brackets $ align (ppVA a <+> text "->" <+> ppVA b)
 ppVA (VA_RecType m) =
@@ -434,9 +437,9 @@ ppVATeX (VA_String s) = text "{\\tt \"" <//> text (teX s) <//> text "\"}"
 ppVATeX (VA_Char c) = char '\'' <//> char c <//> char '\''
 ppVATeX (VA_Atom a) = text (teX a)
 ppVATeX (VA_FunctionDef _info head quants expr) =
-    ppFunctionDef head quants expr
+    ppFunctionDef False head quants expr
 ppVATeX (VA_OperatorDef _info (AS_OpHead head args) expr) =
-    ppOperatorDef head args expr
+    ppOperatorDef False head args expr
 ppVATeX (VA_FunType a b) =
     brackets $ align (ppVATeX a <+> text "->" <+> ppVATeX b)
 ppVATeX (VA_RecType m) =

@@ -68,12 +68,12 @@ evalUnit (env,vs) (AS_VariableDecl _uinfo ids) =
     do{ env' <- foldM (\env id -> bind env (id, VA_Var Nothing)) env ids
       ; return $ (env', vs)
       }
-evalUnit (env,vs) u@(AS_FunctionDef _ head _ _) =
+evalUnit (env,vs) u@(AS_FunctionDef _ _ head _ _) =
     do{ v <- evalU env u
       ; env' <- bind env (head, v)
       ; return $ (env', vs)
       }
-evalUnit (env,vs) u@(AS_OperatorDef _ (AS_OpHead head _) _) =
+evalUnit (env,vs) u@(AS_OperatorDef _ _ (AS_OpHead head _) _) =
     do{ v <- evalU env u
       ; env' <- bind env (head, v)
       ; return $ (env', vs)
@@ -85,11 +85,11 @@ evalUnit _acc u =
 -- top level evalU should simply bind into the env and not yield a value
 
 evalU :: Env -> AS_UnitDef -> ThrowsError VA_Value
-evalU env u@(AS_FunctionDef infoU head quants e) =
+evalU env u@(AS_FunctionDef infoU _ head quants e) =
     if length quants == 0 -- FIXME check to see if any free vars exist
     then evalET env e -- is a constant with free vars bound by env
     else return $ VA_FunctionDef (toInfoE infoU u) head quants e
-evalU _env u@(AS_OperatorDef infoU h@(AS_OpHead _head _args) e) =
+evalU _env u@(AS_OperatorDef infoU _ h@(AS_OpHead _head _args) e) =
     -- NOTE even if the arity is 0, we don't evalE the expression since the
     -- expression e could include uninitialized variables (e.g. Foo == var).
     return $ VA_OperatorDef (toInfoE infoU u) h e
@@ -146,8 +146,8 @@ evalE env _e@(AS_Let _info units expr) =
       ; evalET env' expr
       }
     where filterUnits = filter (\u -> case u of
-            (AS_FunctionDef _ _ _ _) -> True
-            (AS_OperatorDef _ _ _) -> True
+            (AS_FunctionDef _ _ _ _ _) -> True
+            (AS_OperatorDef _ _ _ _) -> True
             _ -> False)
 
 evalE env e@(AS_IF _info b x y) =
@@ -308,8 +308,8 @@ toInfoE :: AS_InfoU -> AS_UnitDef -> AS_InfoE
 toInfoE pos u = (pos, Just u, Nothing)
 
 nameU :: AS_UnitDef -> AS_Expression
-nameU (AS_FunctionDef _ head _ _)             = head
-nameU (AS_OperatorDef _ (AS_OpHead head _) _) = head
+nameU (AS_FunctionDef _ _ head _ _)             = head
+nameU (AS_OperatorDef _ _ (AS_OpHead head _) _) = head
 nameU _ = error "unspecified"
 
 type Infix_Info = (Env, AS_Expression, AS_Expression, AS_Expression)
