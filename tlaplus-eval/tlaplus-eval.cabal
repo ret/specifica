@@ -39,7 +39,7 @@ library
                      
 executable           tli
   main-is:           tli.hs
-  build-depends:     base, parsec >= 3.0.1, tlaplus, tlaplus-eval
+  build-depends:     base, parsec >= 3.0.1, directory, tlaplus, tlaplus-eval
   hs-source-dirs:    app
   extensions:        FlexibleContexts, LambdaCase
   ghc-options:       -Wall
