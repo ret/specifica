@@ -162,17 +162,17 @@ ppE (AS_CloseFunApp) = text "]"
 -- ppE e = text $ "(<?>" ++ (show e) ++ "<?>)"
 
 ppFunctionDef local headexpr qbounds expr =
-    let lo = if local then text "LOCAL" else empty
+    let lo = if local then text "LOCAL " else empty
         bounds = group (cat $ punctuate comma $ map ppQBoundN qbounds)
-     in     group( lo <+> ppE headexpr <//> brackets (align bounds) <+> text "==")
+     in     group( lo <> ppE headexpr <//> brackets (align bounds) <+> text "==")
         </> group (ppE expr)
 
 ppOperatorDef local h l expr =
-    let lo = if local then text "LOCAL" else empty
+    let lo = if local then text "LOCAL " else empty
         args = if length l > 0
                then parens (cat (punctuate comma (map ppE l)))
                else empty
-     in     group (lo <+> ppE h <//> args <+> text "==")
+     in     group (lo <> ppE h <//> args <+> text "==")
         <$> indent 2 (align (group (ppE expr)))
 
 ppOperatorHead (AS_OpHead h l) =
