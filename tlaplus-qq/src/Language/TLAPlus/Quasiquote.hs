@@ -40,9 +40,6 @@ deriving instance Lift AS_UnitDef
 deriving instance Lift AS_OperatorHead
 deriving instance Lift AS_Expression
 
-ii :: AS_InfoE
-ii = mkDummyInfo "?x"
-
 tlaExpr :: String -> Q Exp
 tlaExpr str = do
   case parseTLAExpr str of
