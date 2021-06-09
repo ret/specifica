@@ -1,4 +1,4 @@
-name:                tlaplus
+name:                tlaplus-tests
 version:             0.1
 
 license:             MIT
@@ -7,7 +7,7 @@ license-file:        LICENSE
 author:              Reto Kramer <kramer@acm.org>
 maintainer:          kramer@acm.org
 stability:           experimental
-synopsis:            TLA+ AST, parser and pretty printer
+synopsis:            Tests for TLA+ AST, parser, and pretty printer
 category:            Language
 description:
   Library to facilitate TLA+ processing in Haskell.
@@ -15,23 +15,15 @@ description:
 
 build-type:          Simple
 cabal-version:       >= 1.8
-
-library
-  exposed-modules:   Language.TLAPlus.Syntax
-                     Language.TLAPlus.Pretty
-                     Language.TLAPlus.Parser
--- exported for use in short's parser -- FIXME (use "other-modules:")
-                     Language.TLAPlus.ParserState
-
-  build-depends:     base >= 4, syb, containers, wl-pprint,
-                     parsec >= 3.0.1
-  hs-source-dirs:    src
+                     
+executable           example-simple-expr
+  main-is:           SimpleExpr.hs
+  build-depends:     base >= 4, tlaplus, tlaplus-eval, tlaplus-qq
+  hs-source-dirs:    src/Examples
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
                      -fno-warn-missing-signatures
                      -fno-warn-unused-matches
                      -fno-warn-unused-imports
-                     
-  extensions:        DeriveDataTypeable
-                     FlexibleContexts
+  extensions:        QuasiQuotes

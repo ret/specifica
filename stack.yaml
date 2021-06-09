@@ -2,11 +2,13 @@ resolver: lts-10.3
 
 packages:
 - tlaplus/
+- tlaplus-qq/
 - tlaplus-eval/
+- tlaplus-tests/
 
 extra-deps:
 - Crypto-4.2.5.1
 - QuickCheck-2.11.3
 - dataenc-0.12
-
+  
 flags: {}
