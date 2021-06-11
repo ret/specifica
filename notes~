@@ -1,0 +1,174 @@
+-----------------------------------------------------------
+-- comes up on GameOfLife
+
+$ echo 'grid[<<1>>]' | tle
+** INPUT (pretty-printed):
+grid
+** EVALUATION ERROR **
+:1:1:
+    identifier "grid" not in scope.
+
+but with a space in front of <<, it does parse correctly
+
+$ echo 'grid[ <<1>>]' | tle
+** INPUT (pretty-printed):
+grid[<<1>>]
+** EVALUATION ERROR **
+:1:1:
+    identifier "grid" not in scope
+
+
+-----------------------------------------------------------
+-- a \X b \X c, book page 53
+\X is not a binary infix (parser bug), need to lift
+to top level expr and handle specially.
+e.g. (a \X b) \X c   is NOT the same as a \X b \X c !
+but right now we do the former implicitly!
+It's OK for 2-tuples, but a problem for n>2
+
+When I fix this, also remove the parens in Pretty
+  65: -- hack to make sure that SUBSET (A \X B) is printed with the () in place,
+  66: -- otherwise TLC will complain about ambigious precedence. Note that \X isn't
+  67: -- really an infix operators (see book, p. 284)
+  68: ppE p@(AS_PrefixOP _info op e) = ppPrefixOP op <//> parens (protectE p e)
+
+
+-----------------------------------------------------------
+-- higher order Operator example (old way, not LAMBDA)
+
+---- MODULE test ----
+EXTENDS TLC
+
+Pred(x) == x > 2
+
+F(v,P(_)) == P(v)
+
+G(v) == Pred(v)
+
+ASSUME G(3) (* OK *)
+ASSUME F(2, Pred) (* OK *)
+ASSUME LET x == 3 IN LET y == G(x) IN y (* OK *)
+====
+
+
+-- basic Lambda support:
+
+---- MODULE test ----
+EXTENDS TLC
+F(v,P(_)) == P(v)
+ASSUME F(2, LAMBDA x: x > 2)
+====
+
+
+--also supporting operators in the lambda
+
+---- MODULE test ----
+EXTENDS TLC
+Pred(x) == x > 2
+F(v,P(_)) == P(v)
+ASSUME F(2, LAMBDA x: Pred(x))
+====
+
+
+-- fix for multiple keys:
+-- works for 1
+$ echo '{x \in [a: 1..2]: TRUE}' | tle
+** INPUT (pretty-printed):
+{x \in [a: 1..2]: TRUE}
+!! (VA_String "a",VA_Set (fromList [VA_Int 1,VA_Int 2]))
+
+** RESULT:
+{["a" |-> 1],["a" |-> 2]}
+
+but not two:
+$ echo '{x \in [a: 1..2, b: 3..4]: TRUE}' | tle
+** INPUT (pretty-printed):
+{x \in [a: 1..2,b: 3..4]: TRUE}
+tle: src/Language/TLAPlus/Eval.hs:805:17-38: Irrefutable pattern failed for pattern [(d, r)]
+
+
+
+-- even this works (the lambda carries a slot for the predicate ...
+
+---- MODULE test ----
+EXTENDS TLC
+Pred(x) == x > 2
+F(v,P(_,_)) == P(v, Pred)
+ASSUME F(3, LAMBDA x, p : p(x))
+====
+
+
+
+- DONE add support for
+  { x \in [1..3 -> 4..5]: TRUE }
+
+- DONE-- ADD support for
+  { f \in <<1,2>>: TRUE} since <<>> is a function!  E.g. thus works <<1,2>>[2] is 2
+works now
+ echo '{ f \in DOMAIN(<<4,5>>): TRUE}' | tle --> {1,2}
+ echo '{ f \in <<4,5>>: TRUE}' | tle --> {4,5}
+
+
+DONE
+-- ADD support for
+  echo '[a:1..2] \subseteq [a:1..2]' | tle --> true
+  echo '[a:1..3, b:1..2] \subseteq [a:1..2, b:1..2]' | tle --> false
+  echo '[a:1..2, c:3..3] \subseteq [a:1..2, b:1..2]' | tle --> false
+  echo '[a|->1] \subseteq [a:1..2]' | tle
+
+
+-- enumElements add nested cases
+  echo '{x \in [1..2 -> [10..11 -> 15..16] ]: TRUE}' | tle --> {[1 |-> [10 |-> 15]], ...
+  
+-- done
+  echo 'LET Server == 1..2 Term == 3..4 Index == 5..6 IN { endPoint \in [Server -> [Term -> [date : Term \cup {-1}, index : Index \cup {-1}]]]: TRUE }' | tle --> {[1 |-> [3 |-> [date |-> -1,
+                index |-> -1]]],...
+
+
+-- GET THIS TO WORK
+  echo 'LET x == ("a":>3 @@ "b":>5) y == [a|->3, b|->5] IN x=y' | tle --> TRUE
+  echo '{x \in [3..4 -> 5..6] \union [1..2 -> 10..11 ]: TRUE}' | tle --> {[1 |-> 5], ...
+  echo '[a: 10..11, b: 12..12] \union [c:10..11]' | tle --> {[a: {10,11},b: {12}],[c: {10,11}]}
+
+
+- add a tla_v QQ (to help =test-equality= tests
+- try $binding (inject an AS_Expression
+- add a tla_m QQ (to help build specs)
+
+- use a "expect" type test report, and change the SimpleExpr to a Example, while using proper cabal tests otherise, maybe even with the haddock/doc check?
+
+
+
+-- ADD support for
+
+$ echo '[f EXCEPT ![c] = 42, ![d]=1]' | tle
+** INPUT (pretty-printed):
+[f EXCEPT ![c] = 42,![d] = 1]
+** EVALUATION ERROR **
+ERROR-Syntax.infoE-UPDATE-NEEDED:0:0:
+    No rule to evaluate ([f EXCEPT ![c] = 42,![d] = 1])
+
+
+--- ADD support for <=> \equiv
+--- also see some specs use <==> (long ...) is tla2?
+
+
+DONE - add LOCAL
+
+
+FIX INSTANCE
+- make it a proper expression form (INSTANCE <name> [WITH ...]) [RHS case]
+- support [LOCAL] INSTANCE Foo [Top level form]
+maybe INSTANCE should not be a prefix, but an expression for in itself!
+
+
+- unbounded enumeration
+  CHOOSE x : pred   (note missing x \in ...)
+
+
+enum elements of function type, and recordfunction (MapTo)
+page 28 and 29 of https://lamport.azurewebsites.net/tla/book-02-08-08.pdf
+
+enum function page 49
+
+

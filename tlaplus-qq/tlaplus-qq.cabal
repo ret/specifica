@@ -20,7 +20,7 @@ library
   exposed-modules:   Language.TLAPlus.Quasiquote
   build-depends:     base >= 4, syb, containers, wl-pprint,
                      template-haskell,
-                     tlaplus,
+                     tlaplus, tlaplus-eval,
                      parsec,
                      mtl
   hs-source-dirs:    src
