@@ -456,6 +456,11 @@ basicExprListNoAngularClose =
         }
     , boolean
     , qualident
+    , do
+        _ <- char '$'
+        i <- qualident
+        let AS_Ident info _ n = i
+        return (AS_MetaVar info n)
     , do{ _ <- char '@'
         ; whiteSpace
         ; return AS_OldVal

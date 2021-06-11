@@ -18,7 +18,7 @@ cabal-version:       >= 1.8
                      
 executable           example-simple-expr
   main-is:           SimpleExpr.hs
-  build-depends:     base >= 4, tlaplus, tlaplus-eval, tlaplus-qq
+  build-depends:     base >= 4, syb, tlaplus, tlaplus-eval, tlaplus-qq
   hs-source-dirs:    src/Examples
   ghc-options:       -Wall
                      -fwarn-tabs

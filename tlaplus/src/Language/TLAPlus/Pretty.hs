@@ -160,6 +160,7 @@ ppE (AS_BIF mod name) = text "<builtin" <+>
 ppE (AS_CloseFunApp) = text "]"
 -- missing pretty printer support, debug aid
 -- ppE e = text $ "(<?>" ++ (show e) ++ "<?>)"
+ppE (AS_MetaVar _i n) = text "$" <> text n
 
 ppFunctionDef local headexpr qbounds expr =
     let lo = if local then text "LOCAL " else empty

@@ -73,6 +73,7 @@ data AS_Expression =
         -- in Parser.op_infixS we replace AS_CloseFunApp with the correct
         -- expression tree. AS_CloseFunApp thus never appears in a correct AST
       | AS_CloseFunApp -- the ] in a f[a,b] construct
+      | AS_MetaVar AS_InfoE String
         deriving (Eq, Ord, Show, Data, Typeable)
 
 data AS_Field = AS_Field String deriving (Eq, Ord, Show, Data, Typeable)
@@ -204,6 +205,7 @@ infoE (AS_Case info _ _) = info
       | AS_Stutter AS_Expression AS_Expression
       | AS_BIF AS_InfoE String String
       | AS_CloseFunApp
+      | AS_MetaVar
 -}
 {- for debugging - this ensures that we can print NoRule errors in Eval -}
 infoE _ = mkDummyInfo "ERROR-Syntax.infoE-UPDATE-NEEDED"

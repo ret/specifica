@@ -1,6 +1,7 @@
 -- See:
 --   http://dev.stephendiehl.com/hask/#quasiquotation
 --   https://markkarpov.com/tutorial/th.html#example-2-creating-refined-values-at-compile-time
+--   https://www.schoolofhaskell.com/user/marcin/quasiquotation-101
 
 {-# LANGUAGE DeriveLift         #-}
 {-# LANGUAGE FlexibleInstances  #-}
@@ -20,6 +21,8 @@ import           Language.TLAPlus.Pretty           (prettyPrintE, prettyPrintVA)
 import           Language.TLAPlus.Syntax
 import           Text.ParserCombinators.Parsec     (ParseError, runParser)
 import           Text.ParserCombinators.Parsec.Pos as PPos
+
+import           Data.Generics.Aliases             (extQ)
 
 import           Data.Map                          as Map hiding (map)
 import           Data.Set                          as Set hiding (map)
@@ -55,7 +58,13 @@ tlaExpr :: String -> Q Exp
 tlaExpr str = do
   case parseTLAExpr str of
     Left err -> error (show err)
-    Right e  -> [| e |]
+    Right e  -> do
+      -- [| e |]
+      dataToExpQ (const Nothing `extQ` antiExprExp) e
+
+antiExprExp :: AS_Expression -> Maybe (Q Exp)
+antiExprExp (AS_MetaVar _i v) = Just $ varE (mkName v)
+antiExprExp _                 = Nothing
 
 tla :: QuasiQuoter
 tla = QuasiQuoter tlaExpr err err err

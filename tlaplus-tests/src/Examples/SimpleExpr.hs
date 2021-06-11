@@ -49,8 +49,15 @@ e3 =
 -- 24
 
 
+e4 :: (EnvExpr, AS_Expression)
+e4 =
+  let x = [tla_e|LET foo==41 IN foo|]
+  in ([], [tla_e|1+$x|])
+-- 42
+
+
 main = do
-  let (env, expr) = e0
+  let (env, expr) = e4
   putStrLn $ ppEnv env
   case evalE env expr of
     Left err ->
