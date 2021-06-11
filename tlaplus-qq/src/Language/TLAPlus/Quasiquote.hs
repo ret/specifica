@@ -58,8 +58,7 @@ tlaExpr :: String -> Q Exp
 tlaExpr str = do
   case parseTLAExpr str of
     Left err -> error (show err)
-    Right e  -> do
-      -- [| e |]
+    Right e  ->
       dataToExpQ (const Nothing `extQ` antiExprExp) e
 
 antiExprExp :: AS_Expression -> Maybe (Q Exp)

@@ -457,10 +457,10 @@ basicExprListNoAngularClose =
     , boolean
     , qualident
     , do
-        _ <- char '$'
-        i <- qualident
-        let AS_Ident info _ n = i
-        return (AS_MetaVar info n)
+        p <- getPosition
+        _ <- char '$' -- $x supports splices in Haskell Quasiquoter
+        name <- identifier
+        return $ AS_MetaVar (mkInfo p) name
     , do{ _ <- char '@'
         ; whiteSpace
         ; return AS_OldVal
