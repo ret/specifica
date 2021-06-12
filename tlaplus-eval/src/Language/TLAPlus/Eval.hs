@@ -22,6 +22,14 @@ import Language.TLAPlus.Pretty
 eval :: [AS_Spec] -> CFG_Config -> ThrowsError [VA_Value]
 eval specs cfg = evalReturnEnv specs cfg >>= \(_, vs) -> return vs
 
+evalSpecNoFail :: AS_Spec -> [VA_Value]
+evalSpecNoFail spec =
+  case eval [spec] (CFG_Config Nothing []) of
+    Left err ->
+      error $ "Unexpected failure in evalSpecNoFail: " ++ ppError err
+    Right l ->
+      l
+
 evalReturnEnv :: [AS_Spec] -> CFG_Config -> ThrowsError (Env, [VA_Value])
 evalReturnEnv specs cfg =
     do{ let bindings = map (mkBinding ("foospec")) (cfg_constants cfg)

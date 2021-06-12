@@ -1,5 +1,5 @@
-import           Language.TLAPlus.Eval(evalENoFail)
-import           Language.TLAPlus.Quasiquote(tla_v, tla_e)
+import           Language.TLAPlus.Eval(evalENoFail, evalSpecNoFail)
+import           Language.TLAPlus.Quasiquote(tla_v, tla_e, tla_s)
 
 import           Test.Tasty (defaultMain, TestTree, testGroup)
 import           Test.Tasty.HUnit
@@ -9,6 +9,7 @@ main = defaultMain tests
 tests = testGroup "All" [
     testGroup "Basic" [setTests, operatorTests]
   , testGroup "Environment (eval)" [bindingTests]
+  , testGroup "Evaluation in specification context" [specEvalTests]
   , testGroup "Splice (Haskell specific, meta variable handling)" [spliceTests]
   ]
 
@@ -52,6 +53,23 @@ bindingTests = testGroup "pass env to eval (basic)"
   where
     mkName n = ([], n)
 
+
+specEvalTests :: TestTree
+specEvalTests = testGroup "Spec evaluation"
+  [ testCase "basic spec eval" $
+    let foo = [tla_e|LET a == 1 IN a+2 |]
+     in evalSpecNoFail [tla_s|----
+          MODULE SomeName  ----
+          Foo(x) == <<"a", x>>
+          Fox[x \in 1..100] == <<"b", x>>
+          ASSUME Foo($foo) \* in Specifica ASSUME evaluates and yields expr value
+          ASSUME Fox[42]   \* in Specifica ASSUME evaluates and yields expr value
+          ====
+        |]
+    @?=
+    [ [tla_v|<<"a",  3>> |]
+    , [tla_v|<<"b", 42>> |] ]
+  ]
 
 spliceTests :: TestTree
 spliceTests = testGroup "Splice expression"
