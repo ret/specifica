@@ -27,3 +27,17 @@ executable           example-simple-expr
                      -fno-warn-unused-matches
                      -fno-warn-unused-imports
   extensions:        QuasiQuotes
+
+test-suite test
+  default-language:  Haskell2010
+  type:              exitcode-stdio-1.0
+  hs-source-dirs:    tests
+  main-is:           Test.hs
+  build-depends:     base >= 4, tasty, tasty-hunit, syb, tlaplus, tlaplus-eval, tlaplus-qq
+  ghc-options:       -Wall
+                     -fwarn-tabs
+                     -fno-warn-name-shadowing
+                     -fno-warn-missing-signatures
+                     -fno-warn-unused-matches
+                     -fno-warn-unused-imports
+  extensions:        QuasiQuotes

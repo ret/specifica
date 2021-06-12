@@ -105,6 +105,14 @@ evalET env e =
            }
     else evalE env e
 
+evalENoFail :: Env -> AS_Expression -> VA_Value
+evalENoFail env expr = 
+  case evalE env expr of
+    Left err ->
+      error $ "unexpected failure in evalENoFail: " ++ ppError err
+    Right v ->
+      v
+
 evalE :: Env -> AS_Expression -> ThrowsError VA_Value
 evalE env i@(AS_Ident _info _quallist _name) = --FIXME lookup proper env for qual
     lookupBinding i env "identifier" >>= \e -> case e of

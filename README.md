@@ -15,7 +15,11 @@ Follow these steps to install and invoke a simple sample application called `tle
 
 The [source for the tle sample](https://github.com/ret/specifica/blob/master/tlaplus-eval/app/tle.hs) is just 32 lines of code. Check it out!
 
-## A Few Examples
+## Tests
+
+Invoke `stack test` to run the test-suite (see [tlaplus-tests](https://github.com/ret/specifica/tree/main/tlaplus-tests)).
+
+## A Few Commandline Examples
 
 These steps will build the `tle` utility and copy it to `~/.local/bin/tle`. Now, we're ready to try out `tle` like so:
 
@@ -146,3 +150,7 @@ LET S ==
  <<3,2>>,
  <<3,3>>}
 ```
+
+## Quasiquoter (Haskell specific)
+
+We use Quasiquoters to embed TLA+ expressions and specifications in Haskell code. The test suite uses this feature heavily and may serve as an example to build on for other tool developers.

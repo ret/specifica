@@ -29,7 +29,9 @@ import           Language.TLAPlus.Syntax
 import           Text.ParserCombinators.Parsec     (ParseError, runParser)
 import           Text.ParserCombinators.Parsec.Pos as PPos
 
-import           Data.Generics.Aliases             (extQ)
+import           Data.Data
+import           Data.Generics.Aliases             (extQ, mkT)
+import           Data.Generics.Schemes             (everywhere)
 
 import           Data.Map                          as Map hiding (map)
 import           Data.Set                          as Set hiding (map)
@@ -68,16 +70,32 @@ deriving instance Lift VA_Value
 tlaExpr :: String -> Q Exp
 tlaExpr str = do
   case parseTLAExpr str of
-    Left err -> error (show err)
-    Right e  ->
-      dataToExpQ (const Nothing `extQ` antiExprExp) e
+    Left err ->
+      error (show err)
+    Right e ->
+      let e' = everywhere (mkT dropInfoE) e
+       in dataToExpQ (const Nothing `extQ` antiExprExp) e'
+
 
 antiExprExp :: AS_Expression -> Maybe (Q Exp)
 antiExprExp (AS_MetaVar _i v) = Just $ varE (mkName v)
 antiExprExp _                 = Nothing
 
+tlaExprPat :: String -> Q Pat
+tlaExprPat str = do
+  case parseTLAExpr str of
+    Left err ->
+      error (show err)
+    Right e  ->
+      let e' = everywhere (mkT dropInfoE) e
+       in dataToPatQ (const Nothing `extQ` antiExprPat) e'
+
+antiExprPat :: AS_Expression -> Maybe (Q Pat)
+antiExprPat (AS_MetaVar _i v) = Just $ varP (mkName v)
+antiExprPat _                 = Nothing
+
 tla_e :: QuasiQuoter
-tla_e = QuasiQuoter tlaExpr err err err
+tla_e = QuasiQuoter tlaExpr tlaExprPat err err
 
 -- nicer name for the most used qq
 tla :: QuasiQuoter
@@ -114,9 +132,9 @@ tlaUnit :: String -> Q Exp
 tlaUnit str = do
   case parseTLAUnit str of
     Left err -> error (show err)
-    Right e  ->
-      dataToExpQ (const Nothing `extQ` antiExprExp) e
-
+    Right u  ->
+      let u' = everywhere (mkT dropInfoE) u
+       in dataToExpQ (const Nothing `extQ` antiExprExp) u'
 
 -- spec
 tla_s :: QuasiQuoter
@@ -129,9 +147,10 @@ parseTLASpec s =
 tlaSpec :: String -> Q Exp
 tlaSpec str = do
   case parseTLASpec str of
-    Left err -> error (show err)
-    Right e  ->
-      dataToExpQ (const Nothing `extQ` antiExprExp) e
+    Left err ->
+      error (show err)
+    Right s  ->
+      dataToExpQ (const Nothing `extQ` antiExprExp) s
 
 
 -- helpers

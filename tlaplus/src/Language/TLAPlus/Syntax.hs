@@ -212,6 +212,43 @@ infoE _ = mkDummyInfo "ERROR-Syntax.infoE-UPDATE-NEEDED"
 
 mkDummyInfo s  = (PPos.newPos s 0 0, Nothing, Nothing)
 
+dropInfoE :: AS_Expression -> AS_Expression
+dropInfoE (AS_Ident _ a b) = AS_Ident di a b
+dropInfoE (AS_FunArgList _ a) = AS_FunArgList di a
+dropInfoE (AS_OpApp _ a b)    = AS_OpApp di a b
+dropInfoE (AS_Lambda _ a b) = AS_Lambda di a b
+dropInfoE (AS_FunctionType _ a b) = AS_FunctionType di a b
+dropInfoE (AS_PrefixOP _ a b) = AS_PrefixOP di a b
+dropInfoE (AS_PostfixOP _ a b ) = AS_PostfixOP di a b
+dropInfoE (AS_InfixOP _ a b c) = AS_InfixOP di a b c
+dropInfoE (AS_Let _ a b ) = AS_Let di a b
+dropInfoE (AS_IF _ a b c) = AS_IF di a b c
+dropInfoE (AS_DiscreteSet _ a) = AS_DiscreteSet di a
+dropInfoE (AS_RecordFunction _ a) = AS_RecordFunction di a
+dropInfoE (AS_QuantifierBoundFunction _ a b) = AS_QuantifierBoundFunction di a b
+dropInfoE (AS_Choose _ a b) = AS_Choose di a b
+dropInfoE (AS_Quantified _ a b c) = AS_Quantified di a b c
+dropInfoE (AS_Tuple _ a) = AS_Tuple di a
+dropInfoE (AS_LAND _ a) = AS_LAND di a
+dropInfoE (AS_LOR _ a) = AS_LOR di a
+dropInfoE (AS_Num _ a) = AS_Num di a
+dropInfoE (AS_Bool _ a) = AS_Bool di a
+dropInfoE (AS_StringLiteral _ a) = AS_StringLiteral di a
+dropInfoE (AS_RecordType _ a) = AS_RecordType di a
+dropInfoE (AS_SetComprehension _ a b) = AS_SetComprehension di a b
+dropInfoE (AS_SetGeneration _ a b) = AS_SetGeneration di a b
+dropInfoE (AS_Except a b) = AS_Except a b
+dropInfoE (AS_OldVal) = AS_OldVal
+dropInfoE (AS_Case _ a b) = AS_Case di a b
+dropInfoE (AS_Stutter a b) = AS_Stutter a b
+dropInfoE (AS_Fair a b c) = AS_Fair a b c
+dropInfoE (AS_BIF a b) = AS_BIF a b
+dropInfoE (AS_CloseFunApp) = AS_CloseFunApp
+dropInfoE (AS_MetaVar _ a) = AS_MetaVar di a
+
+di = mkDummyInfo ""
+
+
 infoU :: AS_UnitDef -> AS_InfoU
 infoU (AS_FunctionDef info _ _ _ _) = info
 infoU (AS_OperatorDef info _ _ _)   = info
@@ -221,6 +258,7 @@ infoU (AS_ConstantDecl info _)      = info
 infoU (AS_RecursiveDecl info _)     = info
 infoU (AS_VariableDecl info _)      = info
 infoU (AS_Separator info)           = info
+
 
 -------------------------------------------------------------------------------
 
