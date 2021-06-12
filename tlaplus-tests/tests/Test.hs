@@ -78,4 +78,8 @@ spliceTests = testGroup "Splice expression"
        in evalENoFail [] [tla_e|1+$x|]
       @?=
       [tla_v|42|]
+  ,  testCase "pattern-match using expression splice" $
+       -- note x is on the LHS (pattern to match) and will be bound to 1.
+       let [tla_e|$x+2|] = [tla_e|1+2|] 
+        in x @?= [tla_e|1|]
   ]
