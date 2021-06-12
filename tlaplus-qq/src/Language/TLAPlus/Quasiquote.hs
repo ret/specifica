@@ -9,14 +9,21 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell    #-}
 
-module Language.TLAPlus.Quasiquote where
+module Language.TLAPlus.Quasiquote(
+  tla,
+  tla_e,
+  tla_v,
+  tla_u,
+  tla_s
+) where
 
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Quote
 import           Language.Haskell.TH.Syntax
 
 import           Language.TLAPlus.Eval
-import           Language.TLAPlus.Parser           (expression, mkState)
+import           Language.TLAPlus.Parser           (expression, mkState,
+                                                    tlaspec, unit1)
 import           Language.TLAPlus.Pretty           (prettyPrintE, prettyPrintVA)
 import           Language.TLAPlus.Syntax
 import           Text.ParserCombinators.Parsec     (ParseError, runParser)
@@ -29,6 +36,8 @@ import           Data.Set                          as Set hiding (map)
 
 instance Lift PPos.SourcePos where
   lift p = [| $(liftData p) |]
+
+
 
 deriving instance Lift AS_MapTo
 deriving instance Lift AS_Field
@@ -54,6 +63,8 @@ instance Lift (Set VA_Value) where
   lift p = [| $(liftData p) |]
 deriving instance Lift VA_Value
 
+
+-- expr
 tlaExpr :: String -> Q Exp
 tlaExpr str = do
   case parseTLAExpr str of
@@ -65,16 +76,16 @@ antiExprExp :: AS_Expression -> Maybe (Q Exp)
 antiExprExp (AS_MetaVar _i v) = Just $ varE (mkName v)
 antiExprExp _                 = Nothing
 
-tla :: QuasiQuoter
-tla = QuasiQuoter tlaExpr err err err
-
 tla_e :: QuasiQuoter
-tla_e = tla
+tla_e = QuasiQuoter tlaExpr err err err
+
+-- nicer name for the most used qq
+tla :: QuasiQuoter
+tla = tla_e
 
 parseTLAExpr :: String -> Either ParseError AS_Expression
 parseTLAExpr s =
   runParser expression mkState "" s
-
 
 tlaValue :: String -> Q Exp
 tlaValue str = do
@@ -90,4 +101,38 @@ tlaValue str = do
 tla_v :: QuasiQuoter
 tla_v = QuasiQuoter tlaValue err err err
 
+
+-- unit
+tla_u :: QuasiQuoter
+tla_u = QuasiQuoter tlaUnit err err err
+
+parseTLAUnit :: String -> Either ParseError AS_UnitDef
+parseTLAUnit s =
+  runParser unit1 mkState "" s
+
+tlaUnit :: String -> Q Exp
+tlaUnit str = do
+  case parseTLAUnit str of
+    Left err -> error (show err)
+    Right e  ->
+      dataToExpQ (const Nothing `extQ` antiExprExp) e
+
+
+-- spec
+tla_s :: QuasiQuoter
+tla_s = QuasiQuoter tlaSpec err err err
+
+parseTLASpec :: String -> Either ParseError AS_Spec
+parseTLASpec s =
+  runParser tlaspec mkState "" s
+
+tlaSpec :: String -> Q Exp
+tlaSpec str = do
+  case parseTLASpec str of
+    Left err -> error (show err)
+    Right e  ->
+      dataToExpQ (const Nothing `extQ` antiExprExp) e
+
+
+-- helpers
 err = error "Only defined for values 2"

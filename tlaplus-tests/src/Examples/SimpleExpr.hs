@@ -5,6 +5,8 @@ import           Language.TLAPlus.Syntax
 import           Language.TLAPlus.Pretty
 import           Language.TLAPlus.Eval
 
+import Control.Monad (forM_)
+
 e0 :: (EnvExpr, AS_Expression)
 e0 =
   let servers =     [tla_v|{"A","B"} |]
@@ -56,7 +58,37 @@ e4 =
 -- 42
 
 
+e5 :: (EnvExpr, AS_UnitDef)
+e5 =
+  let foo = [tla_e|LET a == 1 IN a+2 |]
+  in ([], [tla_u|ASSUME $foo |])
+
+
+e6 :: (EnvExpr, AS_Spec)
+e6 =
+  let foo = [tla_e|LET a == 1 IN a+2 |]
+  in ([], [tla_s|----
+     MODULE mod  ----
+     Foo(x) == <<"a", x>>
+     Fox[x \in 1..100] == <<"b", x>>
+     ASSUME Foo($foo)
+     ASSUME Fox[43]
+     ====
+     |])
+
+
 main = do
+  putStrLn $ show e6
+  let (env, spec) = e6
+  case eval [spec] (CFG_Config Nothing []) of
+    Left err ->
+      putStrLn $ ppError err
+    Right l -> do
+      forM_ l $ \v -> do
+        putStrLn $ prettyPrintVA v
+
+
+main2 = do
   let (env, expr) = e4
   putStrLn $ ppEnv env
   case evalE env expr of

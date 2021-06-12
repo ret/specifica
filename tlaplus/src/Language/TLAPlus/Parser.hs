@@ -11,7 +11,8 @@ ISSUES
 
 module Language.TLAPlus.Parser
     (tlaspec, cfgspec, table, mkState,
-     expression, operatorDef) -- for use in australis
+     expression, operatorDef, -- for use in australis
+     unit1) -- for QQ
 where
 
 import           Data.Char                              (isAlpha)
@@ -93,20 +94,23 @@ variable = do{ p <- getPosition
              }
 
 unit :: TLAParser [AS_UnitDef]
-unit = do{ l <- sepBy (choice [ -- try as cheap way to left factor identifier
-                         try operatorDef
-                       , try funDef
-                       , constant
-                       , recursive
-                       , variable
-                       , assume
-                       , theorem
-                       , dashSep
-                       ])
-                  whiteSpace
+unit = do{ l <- sepBy unit1 whiteSpace
          ; specEnd
          ; return l
          }
+
+unit1 :: TLAParser AS_UnitDef
+unit1 = do{ choice [ -- try as cheap way to left factor identifier
+              try operatorDef
+            , try funDef
+            , constant
+            , recursive
+            , variable
+            , assume
+            , theorem
+            , dashSep
+            ]
+          }
 
 mkIdent :: SourcePos -> [String] -> String -> AS_Expression
 mkIdent p qual name = AS_Ident (mkInfo p) qual name
