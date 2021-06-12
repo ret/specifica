@@ -76,3 +76,13 @@ jobs:
         BUILD: ${{ matrix.plan.build }}
         ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
 
+    - name: Test
+      run: |
+        set -ex
+        stack --no-terminal $ARGS test
+        set +ex
+      env:
+        ARGS: ${{ matrix.plan.resolver }}
+        BUILD: ${{ matrix.plan.build }}
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+
