@@ -219,7 +219,7 @@ crossProductTests = testGroup "cross-product (was issue #8)"
       @?=
       [tla_v|{<<1,1,1>>, <<1,2,1>>, <<2,1,1>>, <<2,2,1>>,
               <<1,1,2>>, <<1,2,2>>, <<2,1,2>>, <<2,2,2>>}|]
-  , testCase "Tupe generation" $
+  , testCase "Tuple generation" $
       [tla_v|{<<x+4,y-3>> : <<x,y>> \in {1,2,3} \X {1,2}}|]
       @?=
       [tla_v|{<<5,-2>>,<<5,-1>>,<<6,-2>>,<<6,-1>>,<<7,-2>>,<<7,-1>>}|]
