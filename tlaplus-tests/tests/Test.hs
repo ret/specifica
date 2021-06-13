@@ -8,7 +8,8 @@ main = defaultMain tests
 
 tests = testGroup "All" [
     testGroup "Basic" [setTests, operatorTests, sndOrderOperatorTests,
-                       recordTypeTests, functionTypeTests, sequenceTests]
+                       recordTypeTests, functionTypeTests, sequenceTests,
+                       indentationTests, crossProductTests]
   , testGroup "Environment (eval)" [bindingTests]
   , testGroup "Evaluation in specification context" [specEvalTests]
   , testGroup "Splice (Haskell specific, meta variable handling)" [spliceTests]
@@ -175,9 +176,29 @@ bindingTests = testGroup "pass env to eval (basic)"
       @?=
       [tla_v|6|]
   ]
-  where
-    mkName n = ([], n)
 
+--  https://github.com/ret/specifica/issues/4
+indentationTests :: TestTree
+indentationTests = testGroup "Identation (was issue #4)"
+  [ testCase "Issue #4 fixed" $
+      let env = [ (mkName "y", [tla_v|FALSE|]) ]
+          expr = [tla_e|LET
+                   res == \/ /\ \E y \in {TRUE}: y
+                             /\ y
+                   IN res |]
+       in evalENoFail env expr
+      @?=
+      [tla_v|FALSE|]
+  ]
+
+--  https://github.com/ret/specifica/issues/8
+crossProductTests :: TestTree
+crossProductTests = testGroup "cross-product (was issue #8)"
+  [ testCase "Issue #8 fixed" $
+      [tla_v|(1..2) \X (3..4)|]
+      @?=
+      [tla_v|{<<1,3>>, <<1,4>>, <<2,3>>, <<2,4>>}|]
+  ]
 
 specEvalTests :: TestTree
 specEvalTests = testGroup "Spec evaluation"
@@ -222,3 +243,6 @@ spliceTests = testGroup "Splice expression"
        let [tla_e|$x+2|] = [tla_e|1+2|] 
         in x @?= [tla_e|1|]
   ]
+
+-- helpers
+mkName n = ([], n)
