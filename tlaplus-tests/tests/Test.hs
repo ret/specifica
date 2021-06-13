@@ -49,6 +49,19 @@ bindingTests = testGroup "pass env to eval (basic)"
        in evalENoFail env expr
       @?=
       [tla_v|TRUE|]
+        
+    -- from: http://lamport.azurewebsites.net/pubs/teaching-concurrency.pdf
+  , testCase "nested LETs" $
+      [tla_v|LET
+        GCD (m,n) == 
+          LET DivisorsOf(p) == {d \in 1..p: \E q \in 1..p: p = d*q}
+              MaxElementOf(S) == CHOOSE s \in S: \A t \in S: s >= t
+           IN MaxElementOf(DivisorsOf(m) \cap DivisorsOf(n))
+        IN GCD(12,18)
+      |]
+      @?=
+      [tla_v|6|]
+
   ]
   where
     mkName n = ([], n)
@@ -62,13 +75,27 @@ specEvalTests = testGroup "Spec evaluation"
           MODULE SomeName  ----
           Foo(x) == <<"a", x>>
           Fox[x \in 1..100] == <<"b", x>>
-          ASSUME Foo($foo) \* in Specifica ASSUME evaluates and yields expr value
-          ASSUME Fox[42]   \* in Specifica ASSUME evaluates and yields expr value
+          EVAL Foo($foo) \* in Specifica EVAL evaluates and yields expr value
+          EVAL Fox[42]   \* in Specifica EVAL evaluates and yields expr value
           ====
         |]
     @?=
     [ [tla_v|<<"a",  3>> |]
     , [tla_v|<<"b", 42>> |] ]
+    
+    -- from: http://lamport.azurewebsites.net/pubs/teaching-concurrency.pdf
+  , testCase "GCD example" $
+      evalSpecNoFail [tla_s|----
+        MODULE GCDTest ----
+        GCD (m,n) == 
+          LET DivisorsOf(p) == {d \in 1..p: \E q \in 1..p: p = d*q}
+              MaxElementOf(S) == CHOOSE s \in S: \A t \in S: s >= t
+           IN MaxElementOf(DivisorsOf(m) \cap DivisorsOf(n))
+        EVAL GCD(12,18)
+        ====
+      |]
+      @?=
+      [ [tla_v|6|] ]
   ]
 
 spliceTests :: TestTree
@@ -78,7 +105,7 @@ spliceTests = testGroup "Splice expression"
        in evalENoFail [] [tla_e|1+$x|]
       @?=
       [tla_v|42|]
-  ,  testCase "pattern-match using expression splice" $
+        ,  testCase "pattern-match using expression splice" $
        -- note x is on the LHS (pattern to match) and will be bound to 1.
        let [tla_e|$x+2|] = [tla_e|1+2|] 
         in x @?= [tla_e|1|]

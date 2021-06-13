@@ -107,6 +107,7 @@ unit1 = do{ choice [ -- try as cheap way to left factor identifier
             , recursive
             , variable
             , assume
+            , eval
             , theorem
             , dashSep
             ]
@@ -168,6 +169,14 @@ assume = do{ p <- getPosition
            ; e <- expression
            ; return $ AS_Assume p e
            }
+
+eval :: TLAParser AS_UnitDef
+eval = do{ p <- getPosition
+         ; reserved "EVAL"
+         ; e <- expression
+         ; return $ AS_Eval p e
+         }
+
 
 theorem :: TLAParser AS_UnitDef
 theorem = do{ p <- getPosition
@@ -965,6 +974,7 @@ tladef = emptyDef {
                       , "RECURSIVE"
                       , "VARIABLE", "VARIABLES"
                       , "ASSUME"
+                      , "EVAL"
                       , "LET", "IN", "IF", "THEN", "ELSE", "CHOOSE"
                       , "LAMBDA"
                       ,  "EXCEPT", "!.", "CASE", "[]"

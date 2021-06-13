@@ -24,6 +24,7 @@ data AS_UnitDef =
     AS_FunctionDef AS_InfoU Bool AS_Expression [AS_QBoundN] AS_Expression
   | AS_OperatorDef AS_InfoU Bool AS_OperatorHead AS_Expression
   | AS_Assume AS_InfoU AS_Expression
+  | AS_Eval AS_InfoU AS_Expression
   | AS_Theorem AS_InfoU AS_Expression
   | AS_ConstantDecl AS_InfoU [AS_Expression]
   | AS_RecursiveDecl AS_InfoU [AS_OperatorHead]
@@ -253,6 +254,7 @@ infoU :: AS_UnitDef -> AS_InfoU
 infoU (AS_FunctionDef info _ _ _ _) = info
 infoU (AS_OperatorDef info _ _ _)   = info
 infoU (AS_Assume info _)            = info
+infoU (AS_Eval info _)              = info
 infoU (AS_Theorem info _)           = info
 infoU (AS_ConstantDecl info _)      = info
 infoU (AS_RecursiveDecl info _)     = info

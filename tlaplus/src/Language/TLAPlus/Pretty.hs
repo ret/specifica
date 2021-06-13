@@ -40,6 +40,7 @@ ppUnit (AS_FunctionDef _p local headexpr qbounds expr) =
 ppUnit (AS_OperatorDef _p local (AS_OpHead h l) expr) =
     ppOperatorDef local h l expr
 ppUnit (AS_Assume _p e) = text "ASSUME" </> ppE e
+ppUnit (AS_Eval _p e) = text "EVAL" </> ppE e
 ppUnit (AS_Theorem _p e) = text "THEOREM" </> ppE e
 ppUnit (AS_ConstantDecl _p l) =
     text "CONSTANT" </> align(fillCat $ punctuate comma (map ppE l))

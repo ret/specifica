@@ -63,7 +63,8 @@ evalUnitT (env, vs) u =
 
 evalUnit :: (Env, [VA_Value]) -> AS_UnitDef -> ThrowsError (Env, [VA_Value])
 evalUnit (env,vs) (AS_Separator _) = return $ (env, vs)
-evalUnit (env,vs) (AS_Assume _uinfo e)  =
+evalUnit (env,vs) (AS_Assume _uinfo _e) = return $ (env, vs)
+evalUnit (env,vs) (AS_Eval _uinfo e)  =
     evalET env e >>= \r -> return $ (env, vs++[r])
 evalUnit (env,vs) (AS_ConstantDecl _uinfo l) =
     -- FIXME [...] constant "InitialUpReplicat in scope. [...]
