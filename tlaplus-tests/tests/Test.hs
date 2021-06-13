@@ -9,7 +9,7 @@ main = defaultMain tests
 tests = testGroup "All" [
     testGroup "Basic" [setTests, operatorTests, sndOrderOperatorTests,
                        recordTypeTests, functionTypeTests, sequenceTests,
-                       indentationTests, crossProductTests]
+                       indentationTests, crossProductTests, miscTests]
   , testGroup "Environment (eval)" [bindingTests]
   , testGroup "Evaluation in specification context" [specEvalTests]
   , testGroup "Splice (Haskell specific, meta variable handling)" [spliceTests]
@@ -99,7 +99,11 @@ recordTypeTests = testGroup "RecordType tests"
      [tla_v|LET x == ("a":>3 @@ "b":>5) y == [a|->3, b|->5] IN x=y|]
      @?=
      [tla_v|TRUE|]
-  , testCase "simple inclusion check" $
+  , testCase "simple inclusion check - 1" $
+     [tla_v|[a |-> 1] \in [a:1..2] |]
+     @?=
+     [tla_v|TRUE|]
+  , testCase "simple inclusion check - 2" $
      [tla_v|"a":>1 \in [a:1..2] |]
      @?=
      [tla_v|TRUE|]
@@ -137,6 +141,14 @@ functionTypeTests = testGroup "FunctionType tests"
      @?=
      [tla_v|{(1 :> (10 :> 15)), (1 :> (10 :> 16)), (1 :> (11 :> 15)), (1 :> (11 :> 16)),
              (2 :> (10 :> 15)), (2 :> (10 :> 16)), (2 :> (11 :> 15)), (2 :> (11 :> 16))} |]
+  , testCase "record in function type - 1" $
+     [tla_v|"a" :> 4 \in [{"a"} -> 3..4]|]
+     @?=
+     [tla_v|TRUE|]
+  , testCase "record in function type - 2" $
+     [tla_v|[a |-> 4] \in [{"a"} -> 3..4]|]
+     @?=
+     [tla_v|TRUE|]
   ]
 
 sequenceTests :: TestTree
@@ -198,6 +210,28 @@ crossProductTests = testGroup "cross-product (was issue #8)"
       [tla_v|(1..2) \X (3..4)|]
       @?=
       [tla_v|{<<1,3>>, <<1,4>>, <<2,3>>, <<2,4>>}|]
+  , testCase "Generate cross products (pairs)" $
+      [tla_v|{<<x,y>> : x,y \in 1..2}|]
+      @?=
+      [tla_v|{<<1,1>>, <<1,2>>, <<2,1>>, <<2,2>>}|]
+  , testCase "Generate cross products (3-tuple)" $
+      [tla_v|{<<x,y,z>> : x,y,z \in 1..2}|]
+      @?=
+      [tla_v|{<<1,1,1>>, <<1,2,1>>, <<2,1,1>>, <<2,2,1>>,
+              <<1,1,2>>, <<1,2,2>>, <<2,1,2>>, <<2,2,2>>}|]
+  , testCase "Tupe generation" $
+      [tla_v|{<<x+4,y-3>> : <<x,y>> \in {1,2,3} \X {1,2}}|]
+      @?=
+      [tla_v|{<<5,-2>>,<<5,-1>>,<<6,-2>>,<<6,-1>>,<<7,-2>>,<<7,-1>>}|]
+  ]
+
+      --  https://github.com/ret/specifica/issues/8
+miscTests :: TestTree
+miscTests = testGroup "Misc small items"
+  [ testCase "Parse negative numbers" $
+      [tla_v|-1|]
+      @?=
+      [tla_v|0-1|]
   ]
 
 specEvalTests :: TestTree
