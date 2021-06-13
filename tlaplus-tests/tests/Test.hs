@@ -7,7 +7,8 @@ import           Test.Tasty.HUnit
 main = defaultMain tests
 
 tests = testGroup "All" [
-    testGroup "Basic" [setTests, operatorTests]
+    testGroup "Basic" [setTests, operatorTests, sndOrderOperatorTests,
+                       recordTypeTests, functionTypeTests, sequenceTests]
   , testGroup "Environment (eval)" [bindingTests]
   , testGroup "Evaluation in specification context" [specEvalTests]
   , testGroup "Splice (Haskell specific, meta variable handling)" [spliceTests]
@@ -35,6 +36,118 @@ operatorTests = testGroup "Operator"
      [tla_v|24|]
   ]
 
+sndOrderOperatorTests :: TestTree
+sndOrderOperatorTests = testGroup "2nd-order operator"
+  [ testCase "2nd-order argument" $
+     evalSpecNoFail [tla_s|----
+       MODULE test ----
+       Pred(x) == x > 2
+       F(v,P(_)) == P(v)
+       G(v) == Pred(v)
+       EVAL G(3) (* OK *)
+       EVAL F(2, Pred) (* OK *)
+       EVAL LET x == 3 IN LET y == G(x) IN y (* OK *)
+       ==== |]
+     @?=
+     [ [tla_v|TRUE|], [tla_v|FALSE|], [tla_v|TRUE|] ]
+  , testCase "LAMBDA argument" $
+     evalSpecNoFail [tla_s|----
+       MODULE test ----
+       F(v,P(_)) == P(v)
+       EVAL F(2, LAMBDA x: x > 2)
+       EVAL F(3, LAMBDA x: x > 2)
+       ==== |]
+     @?=
+     [ [tla_v|FALSE|], [tla_v|TRUE|] ]
+  , testCase "LAMBDA with operator" $
+     evalSpecNoFail [tla_s|----
+       MODULE test ----
+       Pred(x) == x > 2
+       F(v,P(_)) == P(v)
+       EVAL F(2, LAMBDA x: Pred(x))
+       EVAL F(3, LAMBDA x: Pred(x))
+       ==== |]
+     @?=
+     [ [tla_v|FALSE|], [tla_v|TRUE|] ]
+  , testCase "LAMBDA with param operator" $
+     evalSpecNoFail [tla_s|----
+       MODULE test ----
+       Pred(x) == x > 2
+       F(v,P(_,_)) == P(v, Pred)
+       EVAL F(2, LAMBDA x, p : p(x))
+       EVAL F(3, LAMBDA x, p : p(x))
+       ==== |]
+     @?=
+     [ [tla_v|FALSE|], [tla_v|TRUE|] ]
+  ]
+
+recordTypeTests :: TestTree
+recordTypeTests = testGroup "RecordType tests"
+  [ testCase "enumerate records in rec type" $
+     [tla_v|{x \in [a: 1..2, b: 3..4]: TRUE}|]
+     @?=
+     [tla_v|{[a |-> 1, b |-> 3],
+             [a |-> 1, b |-> 4],
+             [a |-> 2, b |-> 3],
+             [a |-> 2, b |-> 4]}|]
+   , testCase "union of record types" $
+     [tla_v|[a: 10..11, b: 12..12] \union [c:10..11] |]
+     @?=
+     [tla_v|{[a: 10..11, b: 12..12], [c:10..11]} |]
+  , testCase "record type conversion" $
+     [tla_v|LET x == ("a":>3 @@ "b":>5) y == [a|->3, b|->5] IN x=y|]
+     @?=
+     [tla_v|TRUE|]
+  , testCase "simple inclusion check" $
+     [tla_v|"a":>1 \in [a:1..2] |]
+     @?=
+     [tla_v|TRUE|]
+  , testCase "record type subseteq check 1" $
+     [tla_v|[a:1..2] \subseteq [a:1..2] |]
+     @?=
+     [tla_v|TRUE|]
+  , testCase "record type subseteq check 2" $
+     [tla_v|[a:1..3, b:1..2] \subseteq [a:1..2, b:1..2]|]
+     @?=
+     [tla_v|FALSE|]
+  , testCase "record type subseteq check 3" $
+     [tla_v|[a:1..2, c:3..3] \subseteq [a:1..2, b:1..2]|]
+     @?=
+     [tla_v|FALSE|]
+  ]
+
+functionTypeTests :: TestTree
+functionTypeTests = testGroup "FunctionType tests"
+  [ testCase "enum function types" $
+     [tla_v|{ x \in [1..3 -> 4..5]: TRUE }|]
+     @?=
+     [tla_v|{1:>4, 1:>5,
+             2:>4, 2:>5,
+             3:>4, 3:>5}|]
+  , testCase "union of function types" $
+     [tla_v|{x \in [3..4 -> 5..6] \union [1..2 -> 10..11 ]: TRUE}|]
+     @?=
+     [tla_v|{1:>5, 1:>6, 1:>10, 1:>11,
+             2:>5, 2:>6, 2:>10, 2:>11,
+             3:>5, 3:>6, 3:>10, 3:>11,
+             4:>5, 4:>6, 4:>10, 4:>11}|]
+  , testCase "nested function types" $
+     [tla_v|{x \in [1..2 -> [10..11 -> 15..16] ]: TRUE}|]
+     @?=
+     [tla_v|{(1 :> (10 :> 15)), (1 :> (10 :> 16)), (1 :> (11 :> 15)), (1 :> (11 :> 16)),
+             (2 :> (10 :> 15)), (2 :> (10 :> 16)), (2 :> (11 :> 15)), (2 :> (11 :> 16))} |]
+  ]
+
+sequenceTests :: TestTree
+sequenceTests = testGroup "Sequence Tests"
+  [ testCase "sequence as a function" $
+      [tla_v|<<4,5>>[2]|] @?= [tla_v|5|]
+  , testCase "domain of a sequence" $
+      [tla_v|DOMAIN(<<4,5,6>>)|] @?= [tla_v|{1,2,3}|]
+  , testCase "enumerate sequence elements" $
+      [tla_v|LET s==<<4,5,6>> IN {s[i]: i \in DOMAIN(s)}|] @?= [tla_v|{4,5,6}|]
+  ]
+       
 bindingTests :: TestTree
 bindingTests = testGroup "pass env to eval (basic)"
   [ testCase "simple" $
@@ -61,7 +174,6 @@ bindingTests = testGroup "pass env to eval (basic)"
       |]
       @?=
       [tla_v|6|]
-
   ]
   where
     mkName n = ([], n)

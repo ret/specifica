@@ -372,8 +372,8 @@ prettyPrintVA v =
 ppVA :: VA_Value -> Doc
 ppVA (VA_Map m) =
     let l = Map.foldrWithKey
-              (\k e acc -> (ppVA k <+> text "|->" <+> ppVA e):acc) [] m
-     in brackets $ align (vcat (punctuate comma l))
+              (\k e acc -> (ppVA k <+> text ":>" <+> ppVA e):acc) [] m
+     in parens $ align (vcat (punctuate comma l))
 ppVA (VA_Rec m) =
     let l = Map.foldrWithKey (\(VA_String k) e acc ->
               (text k <+> text "|->" <+> ppVA e):acc) [] m
