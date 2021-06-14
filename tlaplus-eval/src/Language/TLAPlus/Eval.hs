@@ -4,7 +4,6 @@ module Language.TLAPlus.Eval where
 import Prelude hiding ((<$>))
 -- import Control.Monad.Error
 import Control.Monad.Except
-import Control.Monad(MonadFail(..))
 import Debug.Trace as Trace
 import qualified Data.Set as Set (union, intersection,
                                   isSubsetOf, empty, size, insert)
