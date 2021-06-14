@@ -29,7 +29,7 @@ jobs:
         os: [ubuntu-latest]
         # use this to specify what resolvers and ghc to use
         plan:
-        - { build: stack, resolver: "--resolver lts-10.3"  }
+        - { build: stack, resolver: "--resolver lts-17.15"  }
         # use this to include any dependencies from OS package managers
         include: []
         # - os: macOS-latest
@@ -85,4 +85,3 @@ jobs:
         ARGS: ${{ matrix.plan.resolver }}
         BUILD: ${{ matrix.plan.build }}
         ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-
