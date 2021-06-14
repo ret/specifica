@@ -1,4 +1,4 @@
-resolver: lts-10.3
+resolver: lts-17.15
 
 packages:
 - tlaplus/
@@ -7,8 +7,6 @@ packages:
 - tlaplus-tests/
 
 extra-deps:
-- Crypto-4.2.5.1
-- QuickCheck-2.11.3
-- dataenc-0.12
-  
+- wl-pprint-1.2.1
+
 flags: {}

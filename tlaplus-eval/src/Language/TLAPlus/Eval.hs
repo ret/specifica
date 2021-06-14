@@ -1,8 +1,10 @@
+{-# LANGUAGE FlexibleInstances #-}
 module Language.TLAPlus.Eval where
 
 import Prelude hiding ((<$>))
 -- import Control.Monad.Error
 import Control.Monad.Except
+import Control.Monad(MonadFail(..))
 import Debug.Trace as Trace
 import qualified Data.Set as Set (union, intersection,
                                   isSubsetOf, empty, size, insert)
@@ -115,7 +117,7 @@ evalET env e =
     else evalE env e
 
 evalENoFail :: Env -> AS_Expression -> VA_Value
-evalENoFail env expr = 
+evalENoFail env expr =
   case evalE env expr of
     Left err ->
       error $ "unexpected failure in evalENoFail: " ++ ppError err
@@ -267,7 +269,7 @@ evalE env e@(AS_SetGeneration _info expr (AS_QBoundN [qvar@(AS_Ident _ _ _)] qex
 evalE env e@(AS_SetGeneration _info expr (AS_QBoundN [qvarA, qvarB] qexpr)) =
     do{ elements <- enumElements env e qexpr
       ; let crossN = [ (a,b) | a <- elements, b <- elements]
-      ; envs <- mapM (\(a,b) -> bind2 env (qvarA, a) (qvarB, b)) crossN 
+      ; envs <- mapM (\(a,b) -> bind2 env (qvarA, a) (qvarB, b)) crossN
       ; vs <- mapM (\env -> evalET env expr >>= \v -> return v) envs
       ; return $ VA_Set $ Set.fromList vs
       }
@@ -275,7 +277,7 @@ evalE env e@(AS_SetGeneration _info expr (AS_QBoundN [qvarA, qvarB] qexpr)) =
 evalE env e@(AS_SetGeneration _info expr (AS_QBoundN [qvarA, qvarB, qvarC] qexpr)) =
     do{ elements <- enumElements env e qexpr
       ; let crossN = [ (a,b,c) | a <- elements, b <- elements, c <- elements]
-      ; envs <- mapM (\(a,b,c) -> bind3 env (qvarA, a) (qvarB, b) (qvarC, c)) crossN 
+      ; envs <- mapM (\(a,b,c) -> bind3 env (qvarA, a) (qvarB, b) (qvarC, c)) crossN
       ; vs <- mapM (\env -> evalET env expr >>= \v -> return v) envs
       ; return $ VA_Set $ Set.fromList vs
       }
@@ -291,7 +293,7 @@ evalE env e@(AS_SetGeneration info expr (AS_QBoundN [(AS_Tuple _ [compA, compB])
       ; vs <- mapM (\env -> evalET env expr >>= \v -> return v) envs
       ; return $ VA_Set $ Set.fromList vs
       }
-  
+
 evalE env e@(AS_Case _info arms other) =
     do{ arm <- findM (\(AS_CaseArm _info cexpr _vexpr) ->
                         evalET env cexpr >>= \bv ->
@@ -497,7 +499,7 @@ op_cup _i a@(VA_RecType ma) b@(VA_RecType mb) = do
   let kl = Map.keys (Map.intersection ma mb)
   case kl of
     [] -> do
-      return $ VA_Set $ Set.fromList [a,b] 
+      return $ VA_Set $ Set.fromList [a,b]
     _ -> do
       let kls = map (\(VA_String s) -> s) kl
       error $ "Overlapping keys not supported: " ++ show kls
@@ -957,6 +959,8 @@ data EvalError = Default String -- FIXME, do I really need this?
                | FunAppIllegalOperand AS_Expression VA_Value VA_Value
                | RdBeforeWr AS_Expression
 instance Show EvalError where show = ppError
+instance MonadFail (Either EvalError) where
+  fail = error
 
 ppError :: EvalError -> String
 ppError (Default s) = pp $ text s
