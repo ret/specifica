@@ -26,10 +26,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macOS-latest]
         # use this to specify what resolvers and ghc to use
         plan:
         - { build: stack, resolver: "--resolver lts-17.15"  }
+        - { build: stack, resolver: "--resolver nightly"  }
         # use this to include any dependencies from OS package managers
         include: []
         # - os: macOS-latest
