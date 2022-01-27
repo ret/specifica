@@ -154,3 +154,4 @@ LET S ==
 ## Quasiquoter (Haskell specific)
 
 We use Quasiquoters to embed TLA+ expressions and specifications in Haskell code. The test suite uses this feature heavily and may serve as an example to build on for other tool developers.
+ 
