@@ -13,6 +13,7 @@ tests = testGroup "All" [
   , testGroup "Environment (eval)" [bindingTests]
   , testGroup "Evaluation in specification context" [specEvalTests]
   , testGroup "Splice (Haskell specific, meta variable handling)" [spliceTests]
+  , testGroup "Regression test GH issues" [enabledParseTest]
   ]
 
 setTests :: TestTree
@@ -278,5 +279,19 @@ spliceTests = testGroup "Splice expression"
         in x @?= [tla_e|1|]
   ]
 
+enabledParseTest :: TestTree
+enabledParseTest = testGroup "https://github.com/ret/specifica/issues/9"
+  [ testCase "nested ENABLED" $
+      evalSpecNoFail [tla_s|----
+        MODULE X ----
+        DecOk ==
+          [](x = 0 => \A n \in 0 .. k: ENABLED F(n))
+        EVAL TRUE
+        ====
+      |]
+      @?=
+      [ [tla_v|TRUE|] ] -- dummy, this is only about parsing the spec body
+  ]
+  
 -- helpers
 mkName n = ([], n)

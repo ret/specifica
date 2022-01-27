@@ -197,6 +197,7 @@ ppPrefixOP AS_INSTANCE   = text "INSTANCE" <//> space
 ppPrefixOP AS_LOCAL      = text "LOCAL" <//> space
 ppPrefixOP AS_UNION      = text "UNION" <//> space
 ppPrefixOP AS_DOMAIN     = text "DOMAIN" <//> space
+ppPrefixOP AS_ENABLED    = text "ENABLED" <//> space
 ppPrefixOP AS_UNCHANGED  = text "UNCHANGED" <//> space
 ppPrefixOP AS_Not        = text "~"
 ppPrefixOP AS_Neg        = text "-"
@@ -327,6 +328,7 @@ table =
               ,binary "\\in"       (op_infix  AS_In)       AssocNone
               ,binary "\\notin"    (op_infix  AS_NotIn)    AssocNone]
     ,{- 4/ 4-}[prefix "~"          (op_prefix AS_Not)
+              ,prefix "ENABLED"    (op_prefix AS_ENABLED)
               ,prefix "UNCHANGED"  (op_prefix AS_UNCHANGED)
               ,prefix "[]"         (op_prefix AS_ALWAYS)
               ,prefix "<>"         (op_prefix AS_Eventually)]

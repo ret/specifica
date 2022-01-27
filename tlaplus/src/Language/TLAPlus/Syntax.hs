@@ -104,6 +104,7 @@ data AS_PrefixOp = AS_SUBSET
                  | AS_LOCAL
                  | AS_UNION
                  | AS_DOMAIN
+                 | AS_ENABLED
                  | AS_UNCHANGED
                  | AS_Not
                  | AS_Neg

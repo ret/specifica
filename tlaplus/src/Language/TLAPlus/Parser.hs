@@ -405,6 +405,7 @@ table =
               ,binary "\\in"       (op_infix  AS_In)       AssocNone
               ,binary "\\notin"    (op_infix  AS_NotIn)    AssocNone]
     ,{- 4/ 4-}[prefix "~"          (op_prefix AS_Not)
+              ,prefix "ENABLED"    (op_prefix AS_ENABLED) -- prio 4-15, p. 271
               ,prefix "UNCHANGED"  (op_prefix AS_UNCHANGED)
               ,prefix "[]"         (op_prefix AS_ALWAYS)
               ,prefix "<>"         (op_prefix AS_Eventually)]
@@ -915,6 +916,7 @@ lexer = lexer0{P.reservedOp = rOp}
                             -- infix (e.g. cs'.x), or expression
                             -- (e.g. UNCHANGED<<cs>>)
                             "'" -> resOp1 name
+                            "ENABLED" -> resOp1 name
                             "UNCHANGED" -> resOp1 name
                             "DOMAIN" -> resOp1 name
                             "SUBSET" -> resOp1 name
@@ -939,6 +941,7 @@ tladef = emptyDef {
                         "SUBSET"
                       , "DOMAIN"
                       , "UNION"
+                      , "ENABLED"
                       , "UNCHANGED"
                       , "INSTANCE"
                       , "[]"
