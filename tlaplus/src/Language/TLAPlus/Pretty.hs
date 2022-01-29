@@ -239,16 +239,42 @@ ppInfixOP AS_Implication = text "=>"
 ppInfixOP AS_TildeGT     = text "~>"
 ppInfixOP AS_FunApp      = text "[" -- close by postix (noop) AS_CloseFunApp
 
+-- Wrapping expression with operators of the same precendence level
+-- (e.g. * and /) in parens to be super explicit about the order of
+-- evaluation. This is related to: https://github.com/ret/specifica/issues/10.
+--   a * a   + c        -> a * a+c 
+--   (a * a) + c        -> a * a+c
+--   a * (a  + c)       -> a * (a+c)
+--   a * b * c          -> a * b * c
+--   (a * b) * c        -> a * b * c 
+--   a * (b * c)        -> a * b * c
+--   a * b \div c * d   -> ((a * b) \div c) * d    left to right (%%)
+--   a * b \div c       -> (a * b) \div c          left to right (%%)
+--
+-- The issue here is that to match TLC's behavior the parser should error
+-- when it sees distinct operators of the same precence level:
+--   e.g. a b \div c is an error in TLC (%% examples, above), whereas
+-- specicifca's parser reads it from left to right as (a * b) \ div c.
+-- The quick fix for issue #10 is to pretty print the result with parens,
+-- and thus works around the specific parser difference to TLC.
 protectE :: AS_Expression -> AS_Expression -> Doc
 protectE parent e = if prec e < prec parent
                     then group( parens $ ppE e )
-                    else group( ppE e )
+                    else
+                      if (prec e == prec parent) && (not (eqOP e parent))
+                      then group( parens $ ppE e ) -- e.g. prints a*b/c as (a*b)/c
+                      else group( ppE e )
 
 prec :: AS_Expression -> Int
 prec (AS_PrefixOP _info op _e)  = prefixPrec op table
 prec (AS_PostfixOP _info op _e) = postfixPrec op table
 prec (AS_InfixOP _loc op _a _b) = let (p, _) = infixPrec op table in p
 prec _                          = 999
+
+eqOP :: AS_Expression -> AS_Expression -> Bool 
+eqOP (AS_PrefixOP  _ op1 _)   (AS_PrefixOP  _ op2 _)   = op1 == op2
+eqOP (AS_PostfixOP _ op1 _)   (AS_PostfixOP _ op2 _)   = op1 == op2
+eqOP (AS_InfixOP   _ op1 _ _) (AS_InfixOP   _ op2 _ _) = op1 == op2
 
 -- _assoc :: AS_Expression -> Assoc
 -- _assoc (AS_InfixOP _loc op _a _b) = let (_, a) = infixPrec op table in a
