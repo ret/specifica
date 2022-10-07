@@ -54,7 +54,9 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: Setup stack
-      uses: mstksg/setup-stack@v2
+      uses: matsubara0507/setup-stack@ci
+      with:
+        version: "2.7.3"
       env:
         ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
 
