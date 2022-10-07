@@ -54,7 +54,10 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: Setup stack
-      uses: mstksg/setup-stack@v2
+      run: |
+        set -ex
+        curl -sSL https://get.haskellstack.org/ | sh
+        set +ex
       env:
         ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
 
