@@ -64,9 +64,12 @@ LET a ==
  42 :> {{},{42}})
 ```
 
-A concrete function value is printed with the TLC-module operators `:>` (a one-entry function)
-and `@@` (function merge), the same notation the TLA+ tools' TLC model checker uses. The result
-is therefore itself valid, re-parseable TLA+ — you can pipe it straight back into `tle`.
+A concrete function value with a general domain (here `{1, 42}`) is printed with the TLC-module
+operators `:>` (a one-entry function) and `@@` (function merge), the same notation the TLA+
+tools' TLC model checker uses. `tle` follows TLC's other domain-based conventions too: a function
+whose domain is `1..n` prints as a tuple `<<..>>`, and one whose domain is a set of strings prints
+as a record `[k |-> v]`. Either way the result is itself valid, re-parseable TLA+ — you can pipe
+it straight back into `tle`.
 
 ### Define and Evaluate a Function
 

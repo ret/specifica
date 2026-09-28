@@ -5,7 +5,7 @@ module Language.TLAPlus.Pretty
     prettyPrintCFG, ppCFG_Value) where
 
 import           Data.List               (elemIndex, find)
-import           Data.Map                as Map (foldrWithKey)
+import           Data.Map                as Map (foldrWithKey, keys, elems, size)
 import           Data.Set                as Set (elems)
 import           Prelude                 hiding ((<$>))
 import           Text.PrettyPrint.Leijen
@@ -398,10 +398,15 @@ prettyPrintVA v =
         showWidth w doc = displayS (renderPretty 0.9 w doc) ""
 
 ppVA :: VA_Value -> Doc
-ppVA (VA_Map m) =
-    let l = Map.foldrWithKey
-              (\k e acc -> (ppVA k <+> text ":>" <+> ppVA e):acc) [] m
-     in parens $ align (vcat (punctuate (text " @@") l))
+ppVA (VA_Map m)
+    -- A function whose domain is exactly 1..n is a tuple; print it as <<..>>,
+    -- matching how TLC displays such values (verified against tla2tools 2.19).
+    | Map.keys m == map VA_Int [1 .. toInteger (Map.size m)] =
+        ppVA (VA_Seq (Map.elems m))
+    | otherwise =
+        let l = Map.foldrWithKey
+                  (\k e acc -> (ppVA k <+> text ":>" <+> ppVA e):acc) [] m
+         in parens $ align (vcat (punctuate (text " @@") l))
 ppVA (VA_Rec m) =
     let l = Map.foldrWithKey (\(VA_String k) e acc ->
               (text k <+> text "|->" <+> ppVA e):acc) [] m

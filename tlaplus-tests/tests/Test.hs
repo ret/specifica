@@ -32,20 +32,33 @@ roundtripVA v =
 
 prettyPrintTests :: TestTree
 prettyPrintTests = testGroup "Function value notation"
-  -- TLC prints a concrete function value as (k1 :> v1 @@ k2 :> v2), using the
-  -- TLC-module operators :> (one-entry function) and @@ (function merge),
-  -- rather than the [x \in S |-> e] constructor syntax. We match that so tle
-  -- output is valid, re-parseable TLA+. Verified against tla2tools 2.19.
-  [ testCase "function value prints with :> and @@ (matches TLC)" $
+  -- How TLC displays a concrete function value depends on its domain (verified
+  -- against tla2tools 2.19):
+  --   * domain 1..n        -> a tuple  <<v1, .., vn>>
+  --   * general domain      -> (k1 :> v1 @@ k2 :> v2), using the TLC-module
+  --                            operators :> (one-entry function) and @@ (merge)
+  -- (a string domain is a record, printed with |->, handled by ppVA VA_Rec.)
+  -- We match TLC so tle output is valid, re-parseable TLA+.
+  [ testCase "general-domain function prints with :> and @@ (matches TLC)" $
       prettyPrintVA [tla_v|[x \in {1,42} |-> SUBSET {x}]|]
       @?=
       "(1 :> {{},{1}} @@\n 42 :> {{},{42}})"
   , testCase "@@ merges :> singletons into a function value" $
       [tla_v|1 :> 10 @@ 2 :> 20|] @?= [tla_v|[x \in {1,2} |-> x*10]|]
-  , testCase "function value round-trips through the pretty-printer" $
+  , testCase "general-domain function round-trips through the pretty-printer" $
       roundtripVA [tla_v|[x \in {1,42} |-> SUBSET {x}]|]
       @?=
       [tla_v|[x \in {1,42} |-> SUBSET {x}]|]
+  , testCase "1..n-domain function prints as a tuple (matches TLC)" $
+      prettyPrintVA [tla_v|[x \in {1,2,3} |-> x*x]|] @?= "<<1,4,9>>"
+  , testCase "singleton 1..1-domain function prints as a 1-tuple" $
+      prettyPrintVA [tla_v|[x \in {1} |-> 99]|] @?= "<<99>>"
+  , -- In TLA+ a tuple *is* a function with domain 1..n, so printing one as
+    -- <<..>> and re-parsing yields the (equal) sequence value. specifica keeps
+    -- VA_Seq and VA_Map as distinct representations, so the round-trip lands on
+    -- the sequence form -- which matches how TLC also conflates the two.
+    testCase "1..n-domain function round-trips to the sequence value" $
+      roundtripVA [tla_v|[x \in {1,2,3} |-> x*x]|] @?= [tla_v|<<1,4,9>>|]
   ]
 
 setTests :: TestTree
