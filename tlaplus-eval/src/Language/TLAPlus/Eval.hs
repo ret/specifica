@@ -3,6 +3,7 @@ module Language.TLAPlus.Eval where
 
 import Prelude hiding ((<$>))
 -- import Control.Monad.Error
+import Control.Monad
 import Control.Monad.Except
 import Debug.Trace as Trace
 import qualified Data.Set as Set (union, intersection,

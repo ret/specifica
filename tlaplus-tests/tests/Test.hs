@@ -1,5 +1,9 @@
 import           Language.TLAPlus.Eval(evalENoFail, evalSpecNoFail)
 import           Language.TLAPlus.Quasiquote(tla_v, tla_e, tla_s)
+import           Language.TLAPlus.Pretty(prettyPrintVA)
+import           Language.TLAPlus.Parser(expression, mkState)
+import           Language.TLAPlus.Syntax(VA_Value)
+import           Text.ParserCombinators.Parsec(runParser)
 
 import           Test.Tasty (defaultMain, TestTree, testGroup)
 import           Test.Tasty.HUnit
@@ -13,7 +17,35 @@ tests = testGroup "All" [
   , testGroup "Environment (eval)" [bindingTests]
   , testGroup "Evaluation in specification context" [specEvalTests]
   , testGroup "Splice (Haskell specific, meta variable handling)" [spliceTests]
+  , testGroup "Pretty-printer (TLC-compatible function values)" [prettyPrintTests]
   , testGroup "Regression test GH issues" [enabledParseTest]
+  ]
+
+-- | Pretty-print a value, then parse and evaluate the resulting text again.
+-- A correct printer must produce syntax the parser accepts, yielding the
+-- original value (see prettyPrintTests).
+roundtripVA :: VA_Value -> VA_Value
+roundtripVA v =
+  case runParser expression mkState "" (prettyPrintVA v) of
+    Left err -> error (show err)
+    Right e  -> evalENoFail [] e
+
+prettyPrintTests :: TestTree
+prettyPrintTests = testGroup "Function value notation"
+  -- TLC prints a concrete function value as (k1 :> v1 @@ k2 :> v2), using the
+  -- TLC-module operators :> (one-entry function) and @@ (function merge),
+  -- rather than the [x \in S |-> e] constructor syntax. We match that so tle
+  -- output is valid, re-parseable TLA+. Verified against tla2tools 2.19.
+  [ testCase "function value prints with :> and @@ (matches TLC)" $
+      prettyPrintVA [tla_v|[x \in {1,42} |-> SUBSET {x}]|]
+      @?=
+      "(1 :> {{},{1}} @@\n 42 :> {{},{42}})"
+  , testCase "@@ merges :> singletons into a function value" $
+      [tla_v|1 :> 10 @@ 2 :> 20|] @?= [tla_v|[x \in {1,2} |-> x*10]|]
+  , testCase "function value round-trips through the pretty-printer" $
+      roundtripVA [tla_v|[x \in {1,42} |-> SUBSET {x}]|]
+      @?=
+      [tla_v|[x \in {1,42} |-> SUBSET {x}]|]
   ]
 
 setTests :: TestTree

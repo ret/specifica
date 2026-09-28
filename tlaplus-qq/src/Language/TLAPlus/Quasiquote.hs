@@ -59,10 +59,6 @@ deriving instance Lift AS_UnitDef
 deriving instance Lift AS_OperatorHead
 deriving instance Lift AS_Expression
 
-instance Lift (Map VA_Value VA_Value) where
-  lift p = [| $(liftData p) |]
-instance Lift (Set VA_Value) where
-  lift p = [| $(liftData p) |]
 deriving instance Lift VA_Value
 
 

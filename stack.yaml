@@ -1,4 +1,4 @@
-resolver: lts-19.11
+resolver: lts-24.60
 
 packages:
 - tlaplus/
@@ -6,7 +6,6 @@ packages:
 - tlaplus-eval/
 - tlaplus-tests/
 
-extra-deps:
-- wl-pprint-1.2.1
+extra-deps: []
 
 flags: {}

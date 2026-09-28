@@ -29,8 +29,9 @@ jobs:
         os: [ubuntu-latest, macOS-latest]
         # use this to specify what resolvers and ghc to use
         plan:
-        - { build: stack, resolver: "--resolver lts-18.26"  }
-        - { build: stack, resolver: "--resolver lts-19.11"  }
+        - { build: stack, resolver: "--resolver lts-22.44"  }
+        - { build: stack, resolver: "--resolver lts-23.28"  }
+        - { build: stack, resolver: "--resolver lts-24.60"  }
         - { build: stack, resolver: "--resolver nightly"  }
         # use this to include any dependencies from OS package managers
         include: []

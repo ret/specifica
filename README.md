@@ -2,16 +2,40 @@
 
 Specifica is a collection of TLA+ related Haskell libraries comprising a tlaplus parser, pretty printer, and expression evaluator. The code here is meant to serve as a starting point for developers who wish to build small TLA+ related utilities quickly.
 
+## Requirements
+
+The project builds with the [Haskell tool Stack](https://docs.haskellstack.org/) and is tested
+against Stackage **LTS 24.60 (GHC 9.10.3)**. Stack downloads the matching GHC automatically, so
+you do not need a system-wide GHC — only a C toolchain and a few native libraries. On
+Debian/Ubuntu: `sudo apt-get install build-essential libgmp-dev libtinfo-dev zlib1g-dev`.
+
 ## Installation
 
-Follow these steps to install and invoke a simple sample application called `tle` to evaluate a TLA+ expression from stdin.
+Follow these steps to install and invoke a simple sample application called `tle`, which evaluates
+a TLA+ expression read from stdin.
 
-1. Install the [Haskell tool stack utility](https://docs.haskellstack.org/en/stable/README/#how-to-install)
-2. add `~/.local/bin/` to your path (this is where `stack` installs binaries)
+1. Install Stack. The easiest way (macOS and Linux alike) is via [GHCup](https://www.haskell.org/ghcup/):
+   ```
+   curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+   ```
+   then `ghcup install stack --set`.
 
-3. clone this repo with `git clone https://github.com/ret/specifica`
-4. `cd specifica`
-5. `stack install`
+2. Put the toolchain and the stack-installed binaries on your `PATH` by adding these lines to
+   `~/.bashrc`:
+   ```
+   [ -f "$HOME/.ghcup/env" ] && . "$HOME/.ghcup/env"   # ghc, cabal, stack
+   export PATH="$HOME/.local/bin:$PATH"                 # tle, tli (stack install target)
+   ```
+   Then open a new terminal, or run `source ~/.bashrc`, so `stack` and the tools are found.
+   (The GHCup installer usually offers to add the first line for you.)
+
+3. Clone and build:
+   ```
+   git clone https://github.com/ret/specifica
+   cd specifica
+   stack install
+   ```
+   `stack install` copies the `tle` and `tli` executables to `~/.local/bin/`.
 
 The [source for the tle sample](https://github.com/ret/specifica/blob/master/tlaplus-eval/app/tle.hs) is just 32 lines of code. Check it out!
 
@@ -21,7 +45,7 @@ Invoke `stack test` to run the test-suite (see [tlaplus-tests](https://github.co
 
 ## A Few Commandline Examples
 
-These steps will build the `tle` utility and copy it to `~/.local/bin/tle`. Now, we're ready to try out `tle` like so:
+With `tle` on your `PATH` (see above), try it like so:
 
 `$ echo 'LET a == 1 b == {a} \cup {42} IN [x \in b |-> SUBSET {x}]' | tle`
 
@@ -36,9 +60,13 @@ LET a ==
  IN [x \in b |-> SUBSET ({x})]
 
 ** RESULT:
-[1 |-> {{},{1}},
- 42 |-> {{},{42}}]
+(1 :> {{},{1}} @@
+ 42 :> {{},{42}})
 ```
+
+A concrete function value is printed with the TLC-module operators `:>` (a one-entry function)
+and `@@` (function merge), the same notation the TLA+ tools' TLC model checker uses. The result
+is therefore itself valid, re-parseable TLA+ — you can pipe it straight back into `tle`.
 
 ### Define and Evaluate a Function
 
@@ -154,4 +182,3 @@ LET S ==
 ## Quasiquoter (Haskell specific)
 
 We use Quasiquoters to embed TLA+ expressions and specifications in Haskell code. The test suite uses this feature heavily and may serve as an example to build on for other tool developers.
- 

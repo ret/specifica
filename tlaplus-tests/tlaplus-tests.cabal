@@ -14,30 +14,32 @@ description:
   For TLA+ information, please refer to http://www.lamport.org
 
 build-type:          Simple
-cabal-version:       >= 1.8
-                     
+cabal-version:       >= 1.10
+
 executable           example-simple-expr
   main-is:           SimpleExpr.hs
   build-depends:     base >= 4, syb, tlaplus, tlaplus-eval, tlaplus-qq
   hs-source-dirs:    src/Examples
+  default-language:  Haskell2010
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
                      -fno-warn-missing-signatures
                      -fno-warn-unused-matches
                      -fno-warn-unused-imports
-  extensions:        QuasiQuotes
+  default-extensions: QuasiQuotes
 
 test-suite test
   default-language:  Haskell2010
   type:              exitcode-stdio-1.0
   hs-source-dirs:    tests
   main-is:           Test.hs
-  build-depends:     base >= 4, tasty, tasty-hunit, syb, tlaplus, tlaplus-eval, tlaplus-qq
+  build-depends:     base >= 4, tasty, tasty-hunit, syb, parsec >= 3.0.1,
+                     tlaplus, tlaplus-eval, tlaplus-qq
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
                      -fno-warn-missing-signatures
                      -fno-warn-unused-matches
                      -fno-warn-unused-imports
-  extensions:        QuasiQuotes
+  default-extensions: QuasiQuotes

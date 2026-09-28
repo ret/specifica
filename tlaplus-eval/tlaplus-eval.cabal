@@ -15,33 +15,28 @@ description:
   and print expr (e.g. using the tli tool).
 
 build-type:          Simple
-cabal-version:       >= 1.8
+cabal-version:       >= 1.10
 
 library
   exposed-modules:   Language.TLAPlus.Eval
 
   build-depends:     base, containers, mtl, tlaplus, wl-pprint
   hs-source-dirs:    src
+  default-language:  Haskell2010
+  default-extensions: FlexibleContexts, LambdaCase
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
                      -fno-warn-missing-signatures
                      -fno-warn-unused-matches
                      -fno-warn-unused-imports
-                     
-  extensions:        FlexibleContexts, LambdaCase
-  ghc-options:       -Wall
-                     -fwarn-tabs
-                     -fno-warn-name-shadowing
-                     -fno-warn-missing-signatures
-                     -fno-warn-unused-matches
-                     -fno-warn-unused-imports
-                     
+
 executable           tli
   main-is:           tli.hs
   build-depends:     base, parsec >= 3.0.1, directory, tlaplus, tlaplus-eval
   hs-source-dirs:    app
-  extensions:        FlexibleContexts, LambdaCase
+  default-language:  Haskell2010
+  default-extensions: FlexibleContexts, LambdaCase
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
@@ -53,7 +48,8 @@ executable           tle
   main-is:           tle.hs
   build-depends:     base, parsec >= 3.0.1, tlaplus, tlaplus-eval
   hs-source-dirs:    app
-  extensions:        FlexibleContexts, LambdaCase
+  default-language:  Haskell2010
+  default-extensions: FlexibleContexts, LambdaCase
   ghc-options:       -Wall
                      -fwarn-tabs
                      -fno-warn-name-shadowing
